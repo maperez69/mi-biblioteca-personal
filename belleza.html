@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Belleza de Vivir - Tablero Interactivo</title>
+    
+    <!-- Cargamos Tailwind CSS directamente -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cargamos React y ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Cargamos Babel para poder escribir código JSX (React) en el navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Pequeños ajustes de estilos base -->
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        // --- ICONOS (Reemplazando lucide-react para no necesitar instalación) ---
+        const IconSearch = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        const IconBookOpen = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        const IconChevronRight = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
+        const IconMenu = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const IconX = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconLightbulb = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
+        const IconQuote = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>;
+        const IconHash = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>;
+
+        const bookData = [
+          {
+            id: "cap1",
+            title: "1. Aprender a desandar lo andado",
+            synthesis: "El autor expone que la obsesión moderna por buscar la felicidad de forma continua es, paradójicamente, una de las mayores fuentes de infelicidad. Para ser realmente felices, debemos desandar ese camino: dejar de buscar el placer inmediato, aceptar nuestras debilidades, abrazar la tristeza y usar el sentido del humor.",
+            subthemes: [
+              {
+                title: "La tiranía de la felicidad",
+                content: [
+                  "Nuestra sociedad nos exige ser felices, nos obliga a ello y nos impone que tengamos que estar demostrándolo en todo momento.",
+                  "La felicidad consiste en no ser feliz y que no te importe."
+                ]
+              },
+              {
+                title: "La brutal presión mediática a la que todos estamos sometidos",
+                content: [
+                  "La tiranía audiovisual nos propone ideas que nos darán una felicidad sin límites... Casi todas estas propuestas tienen que ver con gratificaciones momentáneas: un viaje, un bien material...",
+                  "Las satisfacciones inmediatas producirán en nosotros dependencia y tolerancia."
+                ]
+              },
+              {
+                title: "La tristeza: una emoción muy positiva",
+                content: [
+                  "Tenemos que asomarnos al desfiladero del dolor para alcanzar altas dosis de humanidad.",
+                  "No hay nadie más insoportable, desde el punto de vista humano, que aquel que no ha sufrido nada."
+                ]
+              },
+              {
+                title: "La emotividad como único motor de la existencia",
+                content: [
+                  "El adolescente actual no sabe lo que quiere y se muestra incapaz de hacer cosas que vayan en contra de sus deseos. 'No me apetece, no me gusta, no lo veo...'",
+                  "El mundo adulto, la profesión seria, el matrimonio y la familia, el compromiso y los proyectos son tareas apasionantes, qué duda cabe, pero poco tienen que ver con estar pasándolo bien todo el tiempo."
+                ]
+              },
+              {
+                title: "El menosprecio de la cabeza",
+                content: [
+                  "Uno de los paradigmas de la sociedad moderna es menospreciar los libros de ensayo y ridiculizar el pensamiento abstracto.",
+                  "La verdadera felicidad solo puede nacer del conocimiento, de la realidad de nosotros mismos y de aquellos seres que amamos y nos rodean."
+                ]
+              },
+              {
+                title: "La tiranía de la materia",
+                content: [
+                  "El dinero, cuando ha satisfecho las necesidades básicas, se puede convertir en el peor de nuestros amos.",
+                  "Si queremos alcanzar una felicidad con mayúsculas, debemos aprender a decir que no; primero, a nosotros mismos y, luego, a los demás."
+                ]
+              },
+              {
+                title: "El humor como motor de cambio",
+                content: [
+                  "El hombre que se toma demasiado en serio está abocado al sufrimiento.",
+                  "El hombre que lucha a brazo partido por ser mejor cada día es el hombre completo."
+                ]
+              },
+              {
+                title: "Desdramatizar a través de la ironía",
+                content: [
+                  "Hay algo muy atractivo, y muy sano, en reírse de nosotros mismos. Sobre todo si ese algo es verdadero y además es malo.",
+                  "Pocas personas alcanzarán mayores cotas de felicidad que aquellas que se aceptan como son y luchan hasta la muerte por intentar ser de otra manera."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap2",
+            title: "2. Los peligros de la psicología positiva",
+            synthesis: "Critica la superficialidad de los libros de autoayuda y el 'pensamiento mágico'. Advierte que conseguir todo lo que uno desea puede ser destructivo; debemos educar nuestros deseos y fijarnos metas acordes a nuestros verdaderos talentos.",
+            subthemes: [
+              {
+                title: "La tiranía de la felicidad",
+                content: [
+                  "Nuestra sociedad actual, una vez que ha conseguido superar sus principales miedos y tener sus necesidades cubiertas, se siente profundamente obligada a ser feliz.",
+                  "Ese, y no otro, es el verdadero problema de determinados enfoques de la psicología positiva... Reducen el ser feliz a una mera pose."
+                ]
+              },
+              {
+                title: "Cómo alcanzar la felicidad superficial",
+                content: [
+                  "Todos los placeres efímeros son eso, efímeros, y están condenados a terminarse pronto dejando un regusto amargo de insatisfacción permanente."
+                ]
+              },
+              {
+                title: "La infantilización del deseo",
+                content: [
+                  "El secreto de la felicidad consiste en conseguir que tus sueños se hagan realidad, y para conseguirlo, basta con que lo desees... Un mensaje tan simplista como falso."
+                ]
+              },
+              {
+                title: "Ten cuidado con aquello que deseas porque puede hacerse realidad",
+                content: [
+                  "Ten cuidado con lo que se desea porque se acaba teniendo... No hay nada peor que conseguir aquello que te propones.",
+                  "Las verdaderas y auténticas metas del hombre deberían ser inalcanzables por definición."
+                ]
+              },
+              {
+                title: "¿Es bueno aquello que quieres? La importancia de educar nuestros deseos",
+                content: [
+                  "Cualquier deseo es éticamente aceptable siempre y cuando satisfaga sus inclinaciones... Ese es el cinismo del que debemos huir.",
+                  "Analice sus deseos, seleccione los mejores, póngase metas cortas, busque alianzas con los otros, elija aquellos que beneficien a un mayor número de personas."
+                ]
+              },
+              {
+                title: "¿Estamos capacitados para cumplir nuestros sueños?",
+                content: [
+                  "Si queremos que nuestros sueños se hagan realidad, cerciorémonos primero de que dichos deseos son buenos y luego pensemos si estamos capacitados para conseguirlos.",
+                  "El que no se conoce a sí mismo no puede conocer a los demás."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap3",
+            title: "3. Amar a los demás es más difícil de lo que parece",
+            synthesis: "El verdadero amor no es una emoción pasajera, sino un acto de voluntad y compromiso. Defiende que las relaciones duraderas se basan en amar a la persona con sus defectos y elegir libremente mantener el compromiso a largo plazo.",
+            subthemes: [
+              {
+                title: "Ama y haz lo que quieras",
+                content: [
+                  "No existe amor verdadero si no hay renuncia, sacrificio y responsabilidad.",
+                  "El amor implica lealtad, no sumisión; donación, no posesión; libertad, no dominación."
+                ]
+              },
+              {
+                title: "El amor infantil: el ejemplo de Peter Pan",
+                content: [
+                  "El adolescente actual (y el no tan adolescente) no sabe lo que quiere... Pequeños dictadores que destrozan las relaciones parentales al no aceptar que nadie les diga lo que tienen que hacer."
+                ]
+              },
+              {
+                title: "Sexualidad sin amor",
+                content: [
+                  "Cuando la sexualidad no está a nuestro servicio, se convierte en nuestro tirano.",
+                  "El sexo es el lenguaje del amor y debemos reivindicar el derecho a que cada relación humana lo hable como quiera... La sexualidad auténtica debe estar unida a la intimidad y el pudor."
+                ]
+              },
+              {
+                title: "Sexualidad sin reproducción",
+                content: [
+                  "Nuestra sociedad, como no podía ser de otro modo, una vez que se ha subido al tren del hedonismo y del bienestar, tiene que optar por la esterilidad.",
+                  "El amor, cuando es fecundo, tiende a la reproducción."
+                ]
+              },
+              {
+                title: "Amor y compromiso",
+                content: [
+                  "El amor no es un sentimiento o una emoción que dependa de nosotros. Es, sobre todo, un acto de voluntad.",
+                  "Cuando dos personas deciden que su amor dependerá de las circunstancias, acaban de darle al amor un golpe de muerte del que jamás podrá recuperarse."
+                ]
+              },
+              {
+                title: "Amar a los demás tal y como son",
+                content: [
+                  "Para amar a los demás de verdad... debemos amar a las personas no a pesar de sus defectos, sino gracias a ellos.",
+                  "La mejor manera de soportar los defectos ajenos es ser conscientes de los nuestros."
+                ]
+              },
+              {
+                title: "Si quieres ser feliz, no pretendas que todo el mundo te ame",
+                content: [
+                  "Una persona feliz raramente habla mal de los demás... porque se conoce tan bien que sabe que esos defectos son exactamente los mismos que tiene él.",
+                  "No dejemos que nuestra felicidad dependa de lo que los otros piensan o dicen de nosotros."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap4",
+            title: "4. Acepta cuál es el papel que el dolor debe tener en tu vida",
+            synthesis: "El sufrimiento y la dificultad son inevitables. Anima a cambiar la cultura de la queja por la del agradecimiento, asumiendo nuestra responsabilidad personal en lugar de buscar culpables externos.",
+            subthemes: [
+              {
+                title: "¿Tiene el dolor algún tipo de sentido?",
+                content: [
+                  "Una vida sin dolor no es una vida real. El dolor no es algo bueno, ni tampoco deseable... Pero la vida está intrínsecamente unida a la pérdida.",
+                  "Saber gestionar cómo enfrentarse al dolor es imprescindible si queremos tener una personalidad sana."
+                ]
+              },
+              {
+                title: "Las personas felices han superado el miedo al dolor",
+                content: [
+                  "Para conseguir ser fuertes desde el punto de vista mental, necesitamos enfrentarnos a la frustración.",
+                  "Educar a un hijo no consiste en evitar los problemas a los que se tiene que enfrentar, sino conseguir que adquiera las fortalezas suficientes para que sea él solo quien las pueda resolver."
+                ]
+              },
+              {
+                title: "El origen de la felicidad está en el agradecimiento",
+                content: [
+                  "Hagan un esfuerzo diario y continuo por ser agradecidos. Por saborear los inmensos bienes que tenemos sin merecerlos.",
+                  "La alegría es más contagiosa que el sarampión... Nada atrae más que estar con alguien que nos transmite tranquilidad."
+                ]
+              },
+              {
+                title: "La importancia del locus de control",
+                content: [
+                  "Las personas que deseen alcanzar la felicidad... deberán hacer un esfuerzo por tener un locus de control interno.",
+                  "La manera más sencilla de conseguir que los demás cambien... es cambiar primero nosotros y para eso, primero, tenemos que saber cuáles son nuestros defectos."
+                ]
+              },
+              {
+                title: "Nada da más felicidad que aquello que conseguimos por nosotros mismos",
+                content: [
+                  "Una de las claves de la felicidad es alcanzar la noble ambición de sacar lo mejor de nuestros talentos, conseguir hacer brillar nuestras virtudes.",
+                  "Hacer algo por nosotros mismos... nos dará una fuente inagotable de sonrisa."
+                ]
+              },
+              {
+                title: "La diferencia entre el dolor y el sacrificio",
+                content: [
+                  "Palpar el dolor es el mejor remedio que existe para poder minimizarlo.",
+                  "Si queremos alcanzar una felicidad que no sea efímera, tenemos que descubrir que el gran secreto está en hacer algo por los demás. Esa es la diferencia entre el dolor y el sacrificio."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap5",
+            title: "5. Si quiere ser feliz, no sea tan empático",
+            synthesis: "Absorber constantemente los problemas y emociones negativas de todo el mundo no es sano. El amor y la caridad deben ser jerárquicos. Buscar agradar a todo el mundo y depender de la opinión ajena es un error trágico.",
+            subthemes: [
+              {
+                title: "El verdadero significado de la empatía",
+                content: [
+                  "Si voy llevando sobre los hombros todas y cada una de las emociones ajenas, sean estas las que sean, entonces, será muy complicado llegar a alcanzar una cierta estabilidad.",
+                  "El querer a los demás... tiene que ser compatible con un cierto grado de frialdad emocional."
+                ]
+              },
+              {
+                title: "El amor es jerárquico",
+                content: [
+                  "No se puede ni se debe querer a todo el mundo por igual... Primero, siempre nuestro cónyuge... En segundo lugar, están los hijos.",
+                  "Para poder dedicar nuestro tiempo a personas con todo tipo de necesidades, primero debemos tener nuestra familia bien atendida."
+                ]
+              },
+              {
+                title: "Seamos lo suficientemente empáticos como para no descuidar lo importante",
+                content: [
+                  "El afecto debe ser ordenado; la empatía, bien entendida, debe empezar por aquellas personas de las que somos responsables."
+                ]
+              },
+              {
+                title: "No debemos poner nuestra felicidad en manos ajenas",
+                content: [
+                  "Las personas adultas y maduras saben de sobra que no le pueden caer bien a todo el mundo.",
+                  "La persona madura cuando oye hablar mal de él afirma que, si le conocieran de verdad, dirían de él cosas aún peores... y no le dedica a la misma ni un solo minuto de su vida."
+                ]
+              },
+              {
+                title: "Es peor pasarse de tonto que pasarse de listo",
+                content: [
+                  "Es peligroso y erróneo pensar que una persona feliz es una persona que solo se preocupa por agradar a los demás.",
+                  "El hombre feliz no teme ni busca tener que enfrentarse, pero saca los dientes cuando es inevitable."
+                ]
+              },
+              {
+                title: "La persona feliz no se siente susceptible",
+                content: [
+                  "Ser personas fácilmente susceptibles es sinónimo de malestar... no pensar que todo lo que hacen los demás tiene que ver con nosotros.",
+                  "La persona feliz es flexible, acepta la posibilidad de que puede estar equivocada y da su brazo a torcer."
+                ]
+              },
+              {
+                title: "La felicidad no es paranoide",
+                content: [
+                  "El paranoico cree conocer una verdad que los demás desconocen. Cataloga a los demás de ser torpes e ingenuos.",
+                  "No supongas que hay mucha gente que se preocupa de ti lo bastante para tener especial interés en perseguirte."
+                ]
+              },
+              {
+                title: "Los hechos no guardan relación con la verdad",
+                content: [
+                  "Mucha gente cae en la infelicidad porque, según él, hay determinados hechos... y empieza a contarnos una historia, su historia, cargada de recriminaciones.",
+                  "La persona feliz es empática con quien debe. Intenta ayudar al que puede. Se mete en lo que sabe."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap6",
+            title: "6. Para ser feliz, no hay que pensar tanto en uno mismo",
+            synthesis: "La felicidad se encuentra cuando no se busca expresamente. La cura es salir de nosotros mismos, aceptar la realidad con sus imperfecciones y enfocar nuestras energías en hacer felices a los demás.",
+            subthemes: [
+              {
+                title: "La felicidad tiene poco que ver con la risa",
+                content: [
+                  "La felicidad es un imposible necesario al que todos aspiramos... Se encuentra cuando no se busca expresamente, cuando no se intenta alcanzar.",
+                  "Si nuestra risa no tiene que ver con la alegría interior... se quedará solo en eso, en el grito que retumba en el desierto."
+                ]
+              },
+              {
+                title: "El peligro del individualismo",
+                content: [
+                  "El egoísmo es una de las claves que explican el éxito del capitalismo... Deseemos objetos superfluos. Llenemos el corazón de vaguedades.",
+                  "Para que el ojo cumpla su función necesita no poder verse a sí mismo. Solo el olvido de sí lleva a la sensibilidad y solo la entrega de sí genera la creatividad."
+                ]
+              },
+              {
+                title: "Conformarse sin caer en el conformismo",
+                content: [
+                  "El infeliz anda siempre inquieto buscando una plenitud que jamás alcanzará.",
+                  "Aceptar nuestra realidad... no es resignarse. El resignado se queja... el que acepta su realidad lucha para cambiarla sin poner su felicidad en algo tan complejo e infrecuente como llegar a vivir en un mundo perfecto."
+                ]
+              },
+              {
+                title: "Eres lo que piensas",
+                content: [
+                  "Las personas depresivas tienen demasiadas distorsiones cognitivas... Frases que hablan con absolutos: Nunca he sido feliz. Nadie me quiere.",
+                  "Cambiar mis pensamientos para cambiar mi situación individual. Aprender a pensar de otra forma. Dejar de ser un mal pensado."
+                ]
+              },
+              {
+                title: "No te fíes mucho de tu memoria",
+                content: [
+                  "Pocas cosas son más engañosas que la memoria y, sin embargo, seguimos aferrándonos a ella... como si fuera una verdad incontrovertible.",
+                  "Tenga usted en cuenta que todos sus malos recuerdos a lo mejor son falsos. Vuelva a mirar la realidad con esos nuevos ojos desprovistos de las gafas de sol del pesimismo."
+                ]
+              },
+              {
+                title: "Contrólese a sí mismo y controle sus deseos",
+                content: [
+                  "Si queremos alcanzar la verdadera paz, debemos controlar nuestros pensamientos, no podemos darle rienda suelta a todos nuestros deseos.",
+                  "El hombre feliz lo es porque es dueño de sí... no permite que le dominen."
+                ]
+              },
+              {
+                title: "El peligro del voluntarismo",
+                content: [
+                  "El voluntarismo es la enfermedad que aqueja a aquel que cree que todo se puede alcanzar.",
+                  "Aceptar nuestras limitaciones es un sano ejercicio de humildad que nos servirá para ponernos metas asequibles."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap7",
+            title: "7. El hombre feliz es dueño de su tiempo",
+            synthesis: "Ser dueños de nuestro tiempo implica aprender a decir 'no' a las exigencias superfluas. Debemos reducir el activismo voraz para dedicar tiempo a la reflexión, al silencio y a las personas que amamos.",
+            subthemes: [
+              {
+                title: "La nada tiene prisa",
+                content: [
+                  "Vivimos en un mundo acelerado. Solo pensamos en el futuro, no tenemos tiempo de disfrutar del presente ni de reflexionar sobre los errores del pasado.",
+                  "El hombre que se precie debe arremangarse y enfrentarse a su yo... debe dedicar un tiempo a saber qué es lo que le pasa."
+                ]
+              },
+              {
+                title: "Combatamos con éxito a los agentes que nos roban el tiempo",
+                content: [
+                  "Nunca tuvimos tanto tiempo libre y nunca tuvimos menos tiempo para hacer cosas. Son tantas las distracciones.",
+                  "Para poder empezar a andar el camino de la madurez... debemos evitar lo superfluo y centrarnos en lo importante."
+                ]
+              },
+              {
+                title: "La nada es voraz",
+                content: [
+                  "El hombre moderno sabe de todo y tiene un acceso masivo a infinitas fuentes de información, pero no parece tener ni idea de cómo dar una respuesta coherente... a los instantes de dificultad.",
+                  "La nada es voraz y su instinto es asesino... Quiere acabar con la vida."
+                ]
+              },
+              {
+                title: "El imperio del nihilismo",
+                content: [
+                  "El hombre del siglo XXI ha decidido apostar lo poco que le queda... en una máquina tragaperras. Sigamos disfrutando.",
+                  "El hombre está diseñado para desear ser completado. No puede conformarse con menos... Está llamado para cambiar el mundo."
+                ]
+              },
+              {
+                title: "La persona feliz sabe decir que no",
+                content: [
+                  "La persona feliz es dueña de sí misma, también de su tiempo. Por eso debe aprender a pisar el freno. Debe aprender el significado de la palabra No.",
+                  "El hombre feliz disfruta del paisaje. Ha entendido que las mayores satisfacciones se alcanzan mucho antes de cruzar la meta."
+                ]
+              },
+              {
+                title: "La persona feliz es reflexiva",
+                content: [
+                  "Para saber por dónde empezar es imprescindible destinar tiempo a la reflexión y para ello es imprescindible el silencio.",
+                  "Lentitud y silencio. Poca velocidad y poco ruido. Cuando las cosas son lentas, se disfrutan más."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap8",
+            title: "8. La vida es una aventura: evite planificarlo todo",
+            synthesis: "El miedo a equivocarse nos paraliza, pero cometer errores es parte fundamental del aprendizaje. Debemos huir del perfeccionismo tóxico, aceptar nuestras limitaciones y abrazar la vida como una aventura.",
+            subthemes: [
+              {
+                title: "Acostúmbrese a perseguir al conejo blanco",
+                content: [
+                  "El plan perfecto sería tener una idea clara, ambiciosa y de fondo... A sabiendas de que alcanzar cualquiera de esas metas no nos aportará la felicidad total.",
+                  "El futuro no depende de lo que hagas... Todo parece ser cuestión de suerte... Nada más alejado de la realidad."
+                ]
+              },
+              {
+                title: "El hombre feliz exprime sus talentos y sabe a quién pegarse",
+                content: [
+                  "Para acertar hay que confiar en los demás, hay que decir que no a lo que nos esclaviza y decir que sí a los que nos rodean.",
+                  "Para innovar y para crecer debemos rodearnos de los mejores. El hombre feliz no es envidioso... Se apoya y se aprovecha del talento ajeno."
+                ]
+              },
+              {
+                title: "Saber elegir lo que uno quiere",
+                content: [
+                  "Debemos aprender a purificar nuestros deseos. Y no hay nada superior que buscar la verdad y hacer el bien.",
+                  "El hombre feliz pone sumo cuidado en elegir lo mejor... Pondrá su vista en metas altas, amplias y ambiciosas."
+                ]
+              },
+              {
+                title: "La felicidad no tiene nada que ver con el talento",
+                content: [
+                  "El hombre feliz no tiene muchos talentos. A veces no tiene ninguno. Precisamente es feliz por ello. No tiene que demostrarle nada a nadie.",
+                  "La persona feliz se acepta tal y como es... Aceptaré mis limitaciones como parte de mi sello personal."
+                ]
+              },
+              {
+                title: "Diferencias entre la resignación y la aceptación",
+                content: [
+                  "La resignación promueve la indefensión pues no nos deja aprender de nuestros errores.",
+                  "El hombre feliz acepta las cosas. No se resigna... Aceptar la realidad es creer que yo soy uno de los principales protagonistas de mi vida."
+                ]
+              },
+              {
+                title: "Las personas felices huyen del perfeccionismo",
+                content: [
+                  "El perfeccionista no disfruta nunca del resultado... y amarga la vida a los demás pues suele exigirles el mismo grado de absurda perfección.",
+                  "Las personas felices nunca olvidan sus malas decisiones, pero no para regodearse obsesivamente sobre ellas, sino para aprender de sus errores."
+                ]
+              },
+              {
+                title: "El peligro de la planificación",
+                content: [
+                  "El hombre actual teme mucho la equivocación y para evitar cometer un error evita pronunciarse.",
+                  "La vida es una sucesión eterna de decisiones parciales... Solo el que no se arriesga es el que nunca acierta."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap9",
+            title: "9. Decálogo del bienestar",
+            synthesis: "Un resumen práctico: rechazar las mentiras del consumismo, evitar el optimismo tóxico (aceptando que la vida duele), entender que el amor exige sacrificio, controlar los pensamientos irracionales y destinar nuestro tiempo a lo importante.",
+            subthemes: [
+              {
+                title: "No es bueno dar consejos",
+                content: [
+                  "Las personas maduras y adultas toman sus propias decisiones, asumen que muchas de estas serán equivocadas y asumen las consecuencias."
+                ]
+              },
+              {
+                title: "1ª Idea: Muchas de las cosas que creemos no son verdad",
+                content: [
+                  "La verdadera felicidad está en el ser y no en el tener. Ninguna cosa material... podrá superar o sustituir la satisfacción que genera el crecimiento personal."
+                ]
+              },
+              {
+                title: "2ª Idea: Evitemos caer en las trampas del positivismo",
+                content: [
+                  "La mejor manera de afrontar la dureza de la vida es ser conscientes de que esta forma parte de ella.",
+                  "El perfeccionismo tiende a esconder toda la basura debajo de la alfombra. El hombre maduro no tiene miedo a mirar cara a cara a su miseria."
+                ]
+              },
+              {
+                title: "3ª Idea: El amor es el único remedio",
+                content: [
+                  "El amor no es racional, no es medible ni comprensible. El amor nos da un plus de inteligencia.",
+                  "Toda amor conlleva una negación... No hay otra opción, o nosotros o los demás."
+                ]
+              },
+              {
+                title: "4ª Idea: Dejar de tenerle miedo al dolor",
+                content: [
+                  "El miedo al dolor (más que el dolor mismo) es una de las principales fuentes de infelicidad."
+                ]
+              },
+              {
+                title: "5ª Idea: Respetar la jerarquía del amor",
+                content: [
+                  "El amor es ordenado, es decir, jerárquico... El casado casa quiere. Quien no busca por encima de todas las cosas la felicidad de su cónyuge no sabe nada de la esencia del matrimonio."
+                ]
+              },
+              {
+                title: "6ª Idea: Al hombre feliz no le importa no serlo",
+                content: [
+                  "Liberémonos para siempre de la obligación de ser felices para siempre.",
+                  "El hombre feliz sale de sí mismo y se preocupa por el otro. Alcanza más felicidad cuando consuela a otro que cuando alcanza sus metas."
+                ]
+              },
+              {
+                title: "7ª Idea: El hombre feliz hace lo que le da la gana en todo momento",
+                content: [
+                  "El hombre libre no es el que hace lo que le da la gana, sino el que hace el bien porque le da la gana."
+                ]
+              },
+              {
+                title: "8ª Idea: El hombre maduro sabe a dónde va, pero le da igual el camino",
+                content: [
+                  "No hacer nada puede ser la peor y la más terrible de las decisiones.",
+                  "La vida es un laberinto infinito de decisiones constantes. Un lugar en el que el que no se moja nunca consigue nada."
+                ]
+              },
+              {
+                title: "9ª Idea: El hombre feliz tiene cuidado con lo que piensa",
+                content: [
+                  "Lo peligroso, amenazante, depresivo y preocupante no es lo que nos pasa, sino lo que creemos que nos pasa. O mejor, lo que tememos que nos vaya a pasar."
+                ]
+              },
+              {
+                title: "10ª Idea: Aprender a poner lo importante por encima de lo superfluo",
+                content: [
+                  "El hombre feliz hace lo que tiene que hacer. Es ordenado y jerarquiza sus acciones... Paradójicamente, haciendo muchas más cosas... tiene mucho más tiempo libre."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap10",
+            title: "10. El sentido de la felicidad, no apto para incrédulos",
+            synthesis: "La vida encierra un misterio y un anhelo de eternidad que la materia no puede saciar. El sufrimiento adquiere sentido cuando nos vacuna contra el egoísmo y nos ayuda a comprender el dolor ajeno.",
+            subthemes: [
+              {
+                title: "La vida es un misterio, y siempre lo será",
+                content: [
+                  "El hombre es el único ser vivo que sabe que va a morir. Por eso nos preparamos para morir. Pero el hombre moderno... ha decidido negarla e intentar ganarle la partida al tiempo.",
+                  "El sufrimiento innecesario es un sufrimiento absurdo; el sufrimiento necesario es un sufrimiento que tiene sentido."
+                ]
+              },
+              {
+                title: "El hombre es un naufragio que busca ser rescatado",
+                content: [
+                  "El hombre es una criatura insaciable. Ninguna realidad humana le es suficiente.",
+                  "El hombre está diseñado para desear ser completado... Está llamado para cambiar el mundo."
+                ]
+              },
+              {
+                title: "Para entender el dolor, es necesario padecerlo",
+                content: [
+                  "Las personas que viven pegadas a su satisfacción diaria, a la búsqueda del placer momentáneo, están incapacitadas para amar.",
+                  "La principal ventaja de padecer sufrimiento es que nos vacuna frente a dolores futuros; la segunda, que nos quita el miedo al dolor y la tercera, que nos hace comprensivos frente a los dolores ajenos."
+                ]
+              },
+              {
+                title: "Liberarse de la esclavitud del yo",
+                content: [
+                  "Si matamos nuestro yo, si acabamos con ese tirano imberbe que quiere gobernar nuestra vida... entonces, alcanzaremos la libertad.",
+                  "Cuando uno aniquila a su yo... le será mucho más fácil acabar con ellas cuando de nuevo aparezcan."
+                ]
+              },
+              {
+                title: "El bien es universal",
+                content: [
+                  "Para hacer algo trascendente, algo que nos sobreviva, debemos dejar de tenerle miedo al dolor y estar dispuesto a pincharnos en el rosal.",
+                  "El bien es universal. Igual que la Verdad y la Belleza. Todas las personas felices lo son por el mismo motivo... Han conseguido liberarse de su yo."
+                ]
+              }
+            ]
+          }
+        ];
+
+        function InteractiveDashboard() {
+          const [activeChapterId, setActiveChapterId] = useState(bookData[0].id);
+          const [searchQuery, setSearchQuery] = useState('');
+          const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+          const activeChapter = useMemo(() => 
+            bookData.find(ch => ch.id === activeChapterId) || bookData[0],
+            [activeChapterId]
+          );
+
+          const filteredSubthemes = useMemo(() => {
+            if (!searchQuery.trim()) {
+              return activeChapter.subthemes.map((subtheme, subIdx) => ({
+                id: `sub-${subIdx}`,
+                title: subtheme.title,
+                content: subtheme.content.map((text, textIdx) => ({ id: `text-${subIdx}-${textIdx}`, text, isMatch: true }))
+              }));
+            }
+
+            const lowerQuery = searchQuery.toLowerCase();
+            
+            return activeChapter.subthemes
+              .map((subtheme, subIdx) => {
+                const matchingContent = subtheme.content
+                  .map((text, textIdx) => ({
+                    id: `text-${subIdx}-${textIdx}`,
+                    text,
+                    isMatch: text.toLowerCase().includes(lowerQuery)
+                  }))
+                  .filter(item => item.isMatch);
+
+                return {
+                  id: `sub-${subIdx}`,
+                  title: subtheme.title,
+                  content: matchingContent
+                };
+              })
+              .filter(subtheme => subtheme.content.length > 0);
+
+          }, [activeChapter, searchQuery]);
+
+          const highlightText = (text, highlight) => {
+            if (!highlight.trim()) return text;
+            const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+            return (
+              <span>
+                {parts.map((part, i) => 
+                  part.toLowerCase() === highlight.toLowerCase() ? 
+                    <mark key={i} className="bg-yellow-300 text-slate-900 rounded-sm px-0.5 font-medium shadow-sm">{part}</mark> : 
+                    part
+                )}
+              </span>
+            );
+          };
+
+          return (
+            <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden selection:bg-blue-200">
+              
+              {isSidebarOpen && (
+                <div 
+                  className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-20 md:hidden transition-opacity"
+                  onClick={() => setIsSidebarOpen(false)}
+                />
+              )}
+
+              {}
+              <aside className={`
+                fixed md:static inset-y-0 left-0 z-30 w-72 bg-white border-r border-slate-200 shadow-2xl md:shadow-none
+                transform transition-transform duration-300 ease-in-out flex flex-col
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+              `}>
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
+                  <div>
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">La Belleza<br/>de Vivir</h1>
+                    <p className="text-sm font-medium text-blue-600 mt-1">Luis Gutiérrez Rojas</p>
+                  </div>
+                  <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-700 bg-slate-50 p-2 rounded-full">
+                    <IconX size={20} />
+                  </button>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+                  <ul className="space-y-1 px-3">
+                    {bookData.map((chapter) => (
+                      <li key={chapter.id}>
+                        <button
+                          onClick={() => {
+                            setActiveChapterId(chapter.id);
+                            setSearchQuery(''); 
+                            setIsSidebarOpen(false);
+                          }}
+                          className={`
+                            w-full text-left px-4 py-3 rounded-xl flex items-start gap-3 transition-all duration-200
+                            ${activeChapterId === chapter.id 
+                              ? 'bg-blue-600 text-white shadow-md shadow-blue-200' 
+                              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                            }
+                          `}
+                        >
+                          <div className={`mt-0.5 flex-shrink-0 ${activeChapterId === chapter.id ? 'text-blue-200' : 'text-slate-400'}`}>
+                             <IconBookOpen size={18} />
+                          </div>
+                          <span className="text-sm font-medium leading-snug">{chapter.title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </aside>
+
+              {}
+              <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
+                
+                <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 sm:px-8 flex items-center gap-4 sticky top-0 z-10">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <IconMenu size={24} />
+                  </button>
+
+                  <div className="flex-1 max-w-2xl relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <IconSearch size={20} className="text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={`Buscar en "${activeChapter.title}"...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="block w-full pl-11 pr-10 py-3 border border-slate-300 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 sm:text-sm transition-all shadow-sm"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery('')}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700"
+                      >
+                        <div className="bg-slate-200 rounded-full p-1">
+                          <IconX size={14} />
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </header>
+
+                {}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 scroll-smooth">
+                  <div className="max-w-3xl mx-auto pb-20">
+                    
+                    <div className="mb-6 flex items-center gap-2 text-xs uppercase tracking-wider text-blue-600 font-bold">
+                      <span>Estudio del Libro</span>
+                      <IconChevronRight size={14} className="text-slate-400" />
+                      <span className="text-slate-500">Capítulo seleccionado</span>
+                    </div>
+
+                    <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 tracking-tight leading-tight">
+                      {activeChapter.title}
+                    </h2>
+
+                    {!searchQuery && (
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50/30 rounded-2xl p-6 sm:p-8 border border-blue-100/60 shadow-sm mb-12 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 -mt-4 -mr-4 text-blue-100 opacity-50 transform rotate-12">
+                          <IconLightbulb size={120} />
+                        </div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-4 text-blue-800">
+                            <IconLightbulb size={20} />
+                            <h3 className="font-bold text-lg">Síntesis del Capítulo</h3>
+                          </div>
+                          <p className="text-slate-700 text-lg leading-relaxed font-medium">
+                            {activeChapter.synthesis}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {searchQuery && (
+                      <div className="flex items-center gap-2 mb-6 text-slate-800">
+                        <IconSearch size={20} className="text-blue-500" />
+                        <h3 className="font-bold text-xl">
+                          Resultados de la Búsqueda
+                        </h3>
+                      </div>
+                    )}
+
+                    <div className="space-y-12">
+                      {filteredSubthemes.length > 0 ? (
+                        filteredSubthemes.map((subtheme) => (
+                          <div key={subtheme.id} className="scroll-mt-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="bg-blue-100 p-2 rounded-lg">
+                                <IconHash size={20} className="text-blue-600" />
+                              </div>
+                              <h4 className="text-xl font-bold text-slate-800 leading-tight">
+                                {subtheme.title}
+                              </h4>
+                            </div>
+
+                            <div className="space-y-4 pl-4 sm:pl-10">
+                              {subtheme.content.map((paragraph) => (
+                                <div key={paragraph.id} className="group flex gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all relative overflow-hidden">
+                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-blue-400 transition-colors"></div>
+                                  <div className="mt-1 flex-shrink-0 text-slate-200 group-hover:text-blue-100 transition-colors">
+                                    <IconQuote size={24} />
+                                  </div>
+                                  <p className="text-lg text-slate-700 leading-relaxed font-serif">
+                                    "{highlightText(paragraph.text, searchQuery)}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-20 px-6 bg-white border border-slate-200 border-dashed rounded-3xl mt-8">
+                          <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <IconSearch size={28} className="text-slate-400" />
+                          </div>
+                          <h3 className="text-lg font-bold text-slate-900 mb-2">Sin coincidencias textuales</h3>
+                          <p className="text-slate-500 max-w-md mx-auto">
+                            No se encontraron citas que contengan la frase "<span className="font-medium text-slate-800">{searchQuery}</span>" en este capítulo.
+                          </p>
+                          <button 
+                            onClick={() => setSearchQuery('')}
+                            className="mt-6 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg font-medium transition-colors"
+                          >
+                            Mostrar todo el contenido
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              </main>
+
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<InteractiveDashboard />);
+    </script>
+</body>
+</html>
