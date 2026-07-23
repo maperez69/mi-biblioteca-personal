@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo lo que tienes que saber sobre la vida - Tablero</title>
+    
+    <!-- Cargamos Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cargamos React y ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Cargamos Babel para compilar JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #99f6e4; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #14b8a6; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        const IconSearch = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        const IconBookOpen = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        const IconChevronRight = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
+        const IconMenu = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const IconX = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconLightbulb = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
+        const IconQuote = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>;
+        const IconHash = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>;
+        const IconCompass = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>;
+
+        const bookData = [
+          {
+            id: "cap1",
+            title: "1. ¿Qué es la madurez de la personalidad?",
+            synthesis: "La madurez de la personalidad es equilibrio, autonomía, capacidad para tener una conducta apropiada según las circunstancias, responsabilidad, y saber tener unos objetivos en la vida realistas, medibles y que nos ayuden a crecer.",
+            subthemes: [
+              {
+                title: "1. Conocerse a sí mismo",
+                content: [
+                  "Conocer las aptitudes, aquellas cosas para las que uno está especialmente dotado, y sacarle el máximo partido; y las limitaciones, lo que uno desconoce o no maneja bien.",
+                  "Este primer punto es importante porque evita que esa persona se embarque en empresas y aventuras en las que sabe que no va a funcionar bien."
+                ]
+              },
+              {
+                title: "2. Haber sabido superar las heridas del pasado",
+                content: [
+                  "La felicidad consiste en tener buena salud y mala memoria. La vida no va bien sin buenas dosis de olvido.",
+                  "Heridas no resueltas del pasado dejan una huella, que se llama resentimiento, que literalmente significa sentirse dolido y no olvidar. Son recuerdos tóxicos, neuróticos, negativos..."
+                ]
+              },
+              {
+                title: "3. Tener una buena percepción de la realidad",
+                content: [
+                  "Captar de forma adecuada lo que uno es y representa y también el entorno que le rodea.",
+                  "Ser realista con uno mismo. No creerse uno más de lo que es, ni tampoco minimizarse. Tener los pies en la tierra."
+                ]
+              },
+              {
+                title: "4. Estabilidad emocional",
+                content: [
+                  "Tener pocos cambios en el estado de ánimo, de tal manera que se dé una cierta regularidad en cómo nos encontramos por dentro.",
+                  "Madurez es saber darle a las cosas que nos pasan la importancia que realmente tienen."
+                ]
+              },
+              {
+                title: "5. Tener un proyecto de vida coherente y realista",
+                content: [
+                  "La vida necesita tener un programa integral en donde se hospeden los cuatro grandes argumentos: amor, trabajo, cultura y amistad.",
+                  "Amor y trabajo conjugan el verbo ser feliz. Son los dos grandes argumentos que hay que cuidar con esmero de artesano."
+                ]
+              },
+              {
+                title: "6. Ser independiente de la gente",
+                content: [
+                  "Esto significa un cierto grado de libertad frente a los demás. Hay que luchar porque cada vez afecte menos el qué dirán.",
+                  "No buscar la aprobación de los demás. Uno mismo es el que aprueba o suspende su conducta."
+                ]
+              },
+              {
+                title: "7. Tener un buen equilibrio entre corazón y cabeza",
+                content: [
+                  "Una persona madura sabe armonizar el mundo de los sentimientos y el de los instrumentos de la razón. Ni demasiado afectivo y sensible, ni demasiado frío y cerebral.",
+                  "Saber distinguir lo que es el paisaje de un valle y lo que yo siento al contemplarlo."
+                ]
+              },
+              {
+                title: "8. Tener una buena educación de la voluntad",
+                content: [
+                  "La voluntad es la capacidad para ponerse unos objetivos concretos e irlos alcanzando gradualmente. Se convierte así en una segunda naturaleza.",
+                  "No hago lo que me apetece ni lo que me pide el cuerpo, sino lo que es mejor para mí. La costumbre de vencerme en lo pequeño."
+                ]
+              },
+              {
+                title: "9. Tener sentido del humor",
+                content: [
+                  "Es la capacidad para reírse uno de uno mismo, poner una nota divertida que permita ver el lado positivo de lo que a uno le ha sucedido.",
+                  "El sentido del humor es patrimonio de los inteligentes y de las personas flexibles, tolerantes, poco rígidas."
+                ]
+              },
+              {
+                title: "10. Tener criterios morales y éticos estables",
+                content: [
+                  "La moral es el arte de vivir con dignidad: el arte de usar de forma correcta la libertad; conocer y practicar lo que es bueno.",
+                  "La ética es la ciencia del comportamiento que busca la excelencia, lo más elevado para el ser humano y que mira por el bien de los demás."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap2",
+            title: "2. La exploración de los sentimientos",
+            synthesis: "Los sentimientos son la forma habitual de vivir la afectividad. Son estados subjetivos, difusos, que tienen una tonalidad grata o molesta desencadenados por estímulos externos o internos.",
+            subthemes: [
+              {
+                title: "¿Qué son los sentimientos?",
+                content: [
+                  "Son estados subjetivos, difusos, que tienen una tonalidad grata o molesta desencadenados por estímulos externos o internos.",
+                  "Los sentimientos son un balance psicológico que miden el haber y el debe de nuestro universo emocional."
+                ]
+              },
+              {
+                title: "Presentimiento y resentimiento",
+                content: [
+                  "El resentimiento es el estado de ánimo de pesadumbre debido a una herida o sufrimiento padecido... que significa literalmente 'sentirse dolido y no olvidar'.",
+                  "Perdonar y olvidar forman un binomio clave, es un esfuerzo psicológico que implica un trabajo personal exigente que tiene mucho que ver con la generosidad."
+                ]
+              },
+              {
+                title: "Catálogo de los sentimientos",
+                content: [
+                  "Las emociones son estados afectivos que se presentan de forma más aguda y súbita, son más fugaces y tienen un correlato somático.",
+                  "Las pasiones constituyen el estatuto intenso, devorador y vehemente de la afectividad y hacen que la inteligencia se vaya a un tercer plano."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap3",
+            title: "3. La madurez de los sentimientos",
+            synthesis: "Entender qué es y cómo debe funcionar la vida afectiva para que sea sana y equilibrada. El amor no es solo un sentimiento, requiere voluntad, inteligencia y espiritualidad para perdurar.",
+            subthemes: [
+              {
+                title: "1. Saber qué es el amor",
+                content: [
+                  "El amor es el primer argumento de la vida... Enamorarse es decirle a alguien: 'No entiendo la vida sin ti, eres parte fundamental de mi proyecto'.",
+                  "Para enamorarse hay tres condiciones sine qua non: admiración, atracción física y psicológica, y aspiración hacia un proyecto común."
+                ]
+              },
+              {
+                title: "2. Saber que los sentimientos son perfectibles y defectibles",
+                content: [
+                  "El amor es como un fuego, hay que alimentarlo a menudo a base de cosas pequeñas: troncos, astillas, palos finos y soplar sobre él.",
+                  "El descuido sistemático de las cosas pequeñas en el amor lleva a un cierto abandono, que a la larga es su ruina."
+                ]
+              },
+              {
+                title: "3. No divinizar el amor",
+                content: [
+                  "El amor es una tarea, un trabajo artesanal, una relación que se alimenta de esfuerzos personales concretos en donde aparecen enseguida dos cosas: el arte de ceder y saber perdonar.",
+                  "Para estar bien con alguien, hace faltar estar primero bien con uno mismo."
+                ]
+              },
+              {
+                title: "4. No convertir a la otra persona en absoluto",
+                content: [
+                  "Madurez afectiva es conocer al otro en sus valores y en sus defectos. Saber cómo es de verdad. Y eso necesita tiempo y capacidad para discriminar.",
+                  "Después del primer deslumbramiento, viene la operación de valorar al otro como realmente es y no elevarlo tanto de nivel."
+                ]
+              },
+              {
+                title: "5. Saber dar y recibir amor",
+                content: [
+                  "Los sentimientos son un camino de ida y vuelta. Entregarse al otro a fondo y a la vez aceptar la donación de la otra persona.",
+                  "Es sencillo enamorarse y es bastante complejo mantenerse enamorado. En eso consiste la madurez sentimental: saber cuidar, mantener y vitalizar el amor."
+                ]
+              },
+              {
+                title: "6. Ser capaz de elaborar un proyecto común",
+                content: [
+                  "Se trata de un programa de vida en donde los intereses de uno se cruzan con los del otro y forman un tejido conjuntivo en el cual cada uno busca el bien del otro.",
+                  "Es fundamental que cada uno se implique y viva de cerca el trabajo profesional del otro, ayudándole a estar al día y poner todos los medios."
+                ]
+              },
+              {
+                title: "7. Tener una buena comunicación",
+                content: [
+                  "Aprender a dialogar con respeto y eficacia... Cuidar el lenguaje verbal, el lenguaje no verbal (gestos, silencios) y el lenguaje subliminal.",
+                  "Aprender a darle a las cosas que pasan la importancia que realmente tienen... Y no hablar nunca de separación: nunca es nunca."
+                ]
+              },
+              {
+                title: "8. Conocer la metodología del amor",
+                content: [
+                  "Las claves para mantenerse junto a alguien son cuatro: sentimientos, inteligencia, voluntad y espiritualidad.",
+                  "La voluntad es la determinación de trabajar el amor elegido y protegerlo de otros posibles afectos que puedan aparecer."
+                ]
+              },
+              {
+                title: "9. Tener una sexualidad positiva",
+                content: [
+                  "La sexualidad es un lenguaje del amor comprometido. La sexualidad debe ser una gran sinfonía en donde se funde lo corporal, lo psicológico, lo espiritual y lo biográfico.",
+                  "El acto sexual sin amor es una relación cuerpo a cuerpo. La sexualidad con amor auténtico es una relación de persona a persona que ayuda a cada uno a crecer."
+                ]
+              },
+              {
+                title: "10. Gobernar los sentimientos",
+                content: [
+                  "La tiranía del capricho: esa persona es traída y llevada por un carrusel de novedades afectivas... Pues bien, todo eso puede ser gobernado por la inteligencia y la voluntad.",
+                  "La inteligencia es la nitidez de la razón que consiste en saber discernir... La voluntad lleva a dirigirse uno a lo mejor, aunque de entrada cueste."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap4",
+            title: "4. La educación sexual",
+            synthesis: "Educar es convertir a alguien en persona libre y con criterio. La verdadera educación sexual integra cuatro dimensiones: biológica, psicológica, cultural y espiritual, alejándose del sexo de usar y tirar.",
+            subthemes: [
+              {
+                title: "¿Qué es educar?",
+                content: [
+                  "Educar es seducir con los valores que no pasan de moda... Es entusiasmar con los valores y enseñarle a alguien a liberarle de tirones momentáneos e inmediatos.",
+                  "Educar no es enseñar Matemáticas o Lengua... sino preparar a una persona para vivir la historia personal de la mejor manera posible, teniendo un fundamento sólido en tiempos líquidos."
+                ]
+              },
+              {
+                title: "La cultura es la estética de la inteligencia",
+                content: [
+                  "La cultura enseña a caminar hacia una meta verdaderamente digna. Por eso la cultura es libertad. Es el privilegio del conocimiento vivido.",
+                  "La lectura sigue siendo en esta falda del siglo XXI una actividad a la que solo acceden los más libres, los atrevidos."
+                ]
+              },
+              {
+                title: "La educación sexual como educación de los sentimientos",
+                content: [
+                  "La sexualidad es un lenguaje del amor comprometido. Es una gran sinfonía en donde se hospedan lo físico, lo psicológico, lo espiritual y lo biográfico.",
+                  "El acto sexual sin amor es una relación cuerpo a cuerpo. La sexualidad con amor auténtico es una relación de persona a persona que ayuda a cada uno a crecer."
+                ]
+              },
+              {
+                title: "Dimensión Moral",
+                content: [
+                  "La relación con lo que es un bien en sí mismo está regida por la norma moral... La norma personalista: nunca uses a esa persona ni la trates solo como objeto y fuente de placer."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap6",
+            title: "6. Diez reglas de oro para vivir en pareja",
+            synthesis: "El amor conyugal requiere un trabajo constante de artesanía psicológica. Pequeños detalles, evitar agravios del pasado, habilidades de comunicación, voluntad y espiritualidad son esenciales para que la relación perdure.",
+            subthemes: [
+              {
+                title: "1. Detalles pequeños positivos",
+                content: [
+                  "El amor hay que trabajarlo a base de detalles pequeños positivos. Lo pequeño nunca es banal ni insignificante, sino al contrario, tiene un enorme valor.",
+                  "El cuidado sistemático de lo menudo lo hace fuerte y el descuido lo torna frágil. Y entra en juego el enemigo mortal que se lo lleva todo por delante: la rutina."
+                ]
+              },
+              {
+                title: "2. No sacar la lista de agravios del pasado",
+                content: [
+                  "Poner todos los medios para no traer al primer plano el repertorio de reproches, ese inventario de anécdotas negativas que en momentos de tensión asoman.",
+                  "El amor se perfecciona con el perdón. Perdonar y olvidar es perdonar dos veces."
+                ]
+              },
+              {
+                title: "3. Evitar discusiones innecesarias",
+                content: [
+                  "Rara vez de una fuerte discusión sale la verdad, pues suele servir más de desahogo y catarsis... La razón deja paso a la pasión y, a la larga, no se olvidan esas palabras duras."
+                ]
+              },
+              {
+                title: "4. Habilidades en la comunicación interpersonal",
+                content: [
+                  "Aprender a dialogar con respeto y eficacia... Cuidar el lenguaje verbal (la magia de las palabras), el lenguaje no verbal (gestos, silencios) y el lenguaje subliminal.",
+                  "Aprender a darle a las cosas que pasan la importancia que realmente tienen... No hablar nunca de separación: nunca es nunca."
+                ]
+              },
+              {
+                title: "5. Alcanzar una sexualidad positiva",
+                content: [
+                  "La sexualidad es el lenguaje del amor comprometido. Es un idioma íntimo que requiere encontrar sus claves para que ambos sepan disfrutar de esa gramática misteriosa.",
+                  "La ternura es el ungüento del amor. Evitar todo lo que suene a monotonía."
+                ]
+              },
+              {
+                title: "6. Voluntad, inteligencia y sentimientos",
+                content: [
+                  "El amor verdadero es un acto de la voluntad, que significa la determinación de trabajar el amor elegido poniendo todos los medios a nuestro alcance.",
+                  "Los sentimientos son perfectibles y defectibles. Lo cual quiere decir que si uno se afana en mantenerlos y pone esfuerzos repetidos en positivo se mejoran."
+                ]
+              },
+              {
+                title: "7. Compartir una espiritualidad vivida",
+                content: [
+                  "Se mezclan aquí lo natural y lo sobrenatural, lo físico y lo metafísico... Se trata de una filosofía común, un sentido de la vida fuerte que a la larga va a ser cemento de unión."
+                ]
+              },
+              {
+                title: "8. Evitar horas o días sin hablarse",
+                content: [
+                  "Hay parejas en las que uno de los miembros, tras una fuerte discusión o desencuentro, abandona la comunicación verbal y no verbal. Si pasamos de horas a días, el tema se vuelve serio.",
+                  "En tales situaciones el más generoso es el que rompe esa distancia y con un gesto mínimo o una palabra acertada reinicia el diálogo."
+                ]
+              },
+              {
+                title: "9. Combatir la tendencia a corregir al cónyuge",
+                content: [
+                  "Puede ser en público o en privado... Esto traduce una enorme falta de habilidad conyugal que antes o después dejará una estela negativa y un regusto nocivo."
+                ]
+              },
+              {
+                title: "10. Valorar los hechos con ecuanimidad",
+                content: [
+                  "Valorar los hechos con ecuanimidad, con moderación, con equilibrio, no convirtiendo los problemas en cosas casi insuperables o durísimas o en dramas históricos."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap7",
+            title: "7. La inmadurez sentimental del hombre de hoy",
+            synthesis: "Análisis del analfabetismo afectivo, muy presente en el hombre contemporáneo, caracterizado por el Síndrome de SIMON (soltero, inmaduro, materialista, obsesionado por el trabajo y narcisista) y el miedo al compromiso.",
+            subthemes: [
+              {
+                title: "Incultura Afectiva",
+                content: [
+                  "Vivimos en una época de intensa incultura afectiva en el hombre... que se manifiesta de modos muy diversos: infidelidad, amores ficticios, relaciones frágiles... y mucho desamor.",
+                  "El objetivo de la educación sentimental es lograr un buen equilibrio entre corazón y cabeza, entre lo afectivo y lo racional."
+                ]
+              },
+              {
+                title: "Miedo o pánico al compromiso",
+                content: [
+                  "Muchos jóvenes de hoy salen, entran, se relacionan, pero cuando se les plantea que todo eso aterrice en un compromiso sólido reaccionan con miedo, ansiedad... y salen huyendo.",
+                  "Solo quien es libre es capaz de comprometerse."
+                ]
+              },
+              {
+                title: "Síndrome de SIMON",
+                content: [
+                  "Soltero, inmaduro en lo afectivo, materialista, obsesionado con el trabajo y narcisista. Debajo de ellos se esconde, se camufla, el pánico al compromiso.",
+                  "Va apareciendo de forma gradual una cierta incapacidad para expresar sentimientos (aleximitia). Este tipo de hombre se centra casi exclusivamente en el trabajo."
+                ]
+              },
+              {
+                title: "Narcisismo y egoísmo",
+                content: [
+                  "Pensar solo en sí mismo y tener una idolatría de su yo... Todo se queda ahí. Se han evaporado los valores humanos y la palabra amor se diluye en encuentros sexuales puntuales."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap8",
+            title: "8. Acertar en la elección afectiva",
+            synthesis: "Elegir a la persona adecuada para compartir la vida es una decisión capital. Requiere conjugar el corazón con la cabeza, conocerse a uno mismo y tener un proyecto de vida compatible.",
+            subthemes: [
+              {
+                title: "Dar en la diana",
+                content: [
+                  "El amor debe ser el primer argumento de la vida al lado del trabajo. La primera cuestión que debo plantear aquí es la importancia de tener un modelo aproximado del tipo de persona que uno busca.",
+                  "El amor es la poesía de los sentidos; la inteligencia, la nitidez de la razón. Son dos variables clave: el sentimiento y la razón forman un compendio esencial para elegir a la persona más adecuada."
+                ]
+              },
+              {
+                title: "Mirada profunda y larga",
+                content: [
+                  "Se trata de ser capaces de mirar por debajo de las apariencias y no quedarse solo en lo externo. Esto es, la capacidad de penetración en el otro y de esta forma sutil descubrimos de verdad a quien está asomando enfrente de uno.",
+                  "Saber explorar la personalidad del otro y ver si hay compatibilidad y armonía. Por eso es tan importante en ese periodo denominado salir ser capaces de captar esto."
+                ]
+              },
+              {
+                title: "Proteger el amor elegido",
+                content: [
+                  "Los enamoramientos no deseados aparecen cuando menos se espera y en la mayoría de los casos la persona se da cuenta de que algo está pasando interiormente pero no se corta a tiempo.",
+                  "La voluntad es la determinación de trabajar el amor elegido y protegerlo de otros posibles afectos que puedan aparecer."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap9",
+            title: "9. Cómo superar las adversidades",
+            synthesis: "La vida tiene un fondo dramático e imprevisto. Para superar los traumas es vital el ordenamiento psicológico de los hechos, volver a empezar y desarrollar la resiliencia (resistencia a la adversidad).",
+            subthemes: [
+              {
+                title: "Mi vida personal",
+                content: [
+                  "La felicidad consiste en tener un proyecto de vida coherente y realista, con ilusión, en donde deben alojarse cuatro grandes argumentos: amor, trabajo, cultura y amistad.",
+                  "Cualquier trayectoria humana comporta riesgos, dificultades, adversidades... y para ello hay que estar preparado."
+                ]
+              },
+              {
+                title: "¿Cómo hacer para superar los traumas?",
+                content: [
+                  "Ordenar los hechos e intentar enfocarlos para buscar una salida... Hacer una lista de mayor a menor intensidad de lo sucedido.",
+                  "Volver a empezar. La capacidad para intentar sobreponerse a ellos y comenzar de nuevo, poco a poco. Esto requiere de la voluntad."
+                ]
+              },
+              {
+                title: "La importancia de la resiliencia",
+                content: [
+                  "Resiliencia significa resistencia a la adversidad, aprender a soportar situaciones duras y ser capaces de crecerse ante las dificultades y no hundirse.",
+                  "La resiliencia es el arte de cambiar el dolor y dotarlo de sentido, la capacidad para ser feliz incluso cuando tienes heridas del alma."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap10",
+            title: "10. La educación de la voluntad",
+            synthesis: "La voluntad es la joya de la corona de la conducta. Es la capacidad para aplazar la recompensa inmediata en favor de metas mediatas y valiosas. Un decálogo esencial para fortalecerla.",
+            subthemes: [
+              {
+                title: "1. Aprendizaje gradual",
+                content: [
+                  "La voluntad necesita un aprendizaje gradual que se consigue con la repetición de actos en donde uno se vence y lucha, cae y se levanta y vuelve a empezar.",
+                  "Se trata de ir adquiriendo hábitos positivos. Somos animales de hábitos; los buenos se llaman virtudes y los malos se llaman vicios."
+                ]
+              },
+              {
+                title: "2. Empezar por negarse o vencerse",
+                content: [
+                  "Toda educación de la voluntad tiene un trasfondo ascético: la costumbre de vencerse en lo pequeño.",
+                  "El campo de batalla es lo diario, lo menudo, lo que parece trivial... El arte de renunciar a lo cercano buscando un bien lejano."
+                ]
+              },
+              {
+                title: "3. La importancia de la motivación",
+                content: [
+                  "Cualquier avance en la voluntad se hace más fácil si hay motivación. Estar motivado es tener el arco tenso para apuntar al mejor blanco.",
+                  "Tener un motivo por el que luchar activa la voluntad y la prepara para actuar."
+                ]
+              },
+              {
+                title: "4. Objetivos claros y estables",
+                content: [
+                  "Es fundamental tener objetivos claros, precisos, bien delimitados, medibles y estables.",
+                  "La cabeza no tolera la dispersión. Aprender a renunciar es sabiduría y paz interior. Comenzar es de todos; continuar, de persona perseverante."
+                ]
+              },
+              {
+                title: "5. Fondo austero y sobrio",
+                content: [
+                  "Toda educación de la voluntad tiene un fondo austero, sobrio, especialmente cuando se está comenzando.",
+                  "Todo lo mejor emerge lentamente y de manera pequeña. Es vital mostrar modelos de identidad atractivos que empujen a imitarlos."
+                ]
+              },
+              {
+                title: "6. Dominio de uno mismo",
+                content: [
+                  "A medida que uno tiene más voluntad, se gobierna mejor y es más dueño de sí mismo y no se deja llevar por el estímulo inmediato.",
+                  "Uno no hace lo que le apetece, ni lo más fácil, sino que se dirige hacia lo mejor. Es la aristocracia de la conducta."
+                ]
+              },
+              {
+                title: "7. La necesidad del orden",
+                content: [
+                  "Una persona con voluntad se da cuenta de lo importante que es el orden. El orden es uno de los mejores amigos de la inteligencia.",
+                  "Orden en la forma de pensar, de vivir, de trabajar. Ordenar es tirar lo que sobra y no sirve; esto aporta armonía y paz interior."
+                ]
+              },
+              {
+                title: "8. Ser constante y tenaz",
+                content: [
+                  "Una persona alcanza lo que se ha propuesto si es constante. Esto significa tenacidad, persistencia, no darse por vencido.",
+                  "Constancia es saber esperar y saber continuar. Es la mejor fórmula contra la fatiga, teniendo una mirada que apunta a la lejanía."
+                ]
+              },
+              {
+                title: "9. Indicador de madurez",
+                content: [
+                  "Una buena educación de la voluntad es un indicador claro de madurez psicológica.",
+                  "Una persona con voluntad llega en la vida más lejos que una inteligente. Quien no la tiene está a merced de sus caprichos."
+                ]
+              },
+              {
+                title: "10. Educación interminable",
+                content: [
+                  "La educación de la voluntad no se termina nunca. El ser humano es siempre una sinfonía inacabada.",
+                  "El verdadero objetivo de la voluntad es la victoria sobre uno mismo."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap11",
+            title: "11. Modelos de felicidad",
+            synthesis: "La felicidad es un tema interminable y poliédrico. Ha sido analizada desde la antigüedad clásica hasta el pensamiento cristiano y moderno, entendiéndola como plenitud, virtud, satisfacción de deseos o autorrealización.",
+            subthemes: [
+              {
+                title: "La felicidad en el mundo clásico",
+                content: [
+                  "Para Sócrates la felicidad consistía en conocerse a sí mismo. Para Platón en el amor... Aristóteles dice que la felicidad consiste en el bien.",
+                  "Séneca nos da un giro muy interesante. La felicidad consiste en la virtud, que es el hábito de obrar bien... la posesión total y simultánea del bien."
+                ]
+              },
+              {
+                title: "La felicidad como autorrealización",
+                content: [
+                  "La felicidad es un ideal que cualquier ser humano busca, sabiéndolo o sin saberlo, y que a la postre consiste en la mejor realización de uno mismo.",
+                  "La felicidad consiste en una vida lograda. Que no es otra cosa que una vida plena... La felicidad es igual a plenitud."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap12",
+            title: "12. Diez consejos para ser feliz",
+            synthesis: "La felicidad razonable se basa en una vida lograda y autorrealización. Este decálogo ofrece pautas prácticas para alcanzarla sanando el pasado y teniendo visión de futuro.",
+            subthemes: [
+              {
+                title: "1. Cerrar las heridas del pasado",
+                content: [
+                  "La felicidad consiste en ser capaz de cerrar las heridas del pasado. Necesitamos reconciliarnos con nuestro pasado. Superar traumas, impactos negativos, reveses, fracasos.",
+                  "Vivir instalado en el presente sabiendo sacarle el máximo partido... y, sobre todo, vive empapado de futuro."
+                ]
+              },
+              {
+                title: "2. Tener una visión positiva de la vida",
+                content: [
+                  "Aprender a tener una visión positiva de la vida... El optimismo es una forma positiva de captar la realidad. Y eso requiere una educación de la mirada.",
+                  "Descubrir la dimensión más positiva de la realidad, ese segmento que se esconde en el fondo de los hechos y que tiene unas notas positivas."
+                ]
+              },
+              {
+                title: "3. Tener una voluntad de hierro",
+                content: [
+                  "Fuerte, compacta, recia, robusta, resistente al desaliento... Tener una voluntad firme es uno de los más claros indicadores de madurez de la personalidad.",
+                  "Toda educación empieza y termina por la voluntad. Sirve nada más y nada menos que para conseguir el adecuado desarrollo del proyecto personal."
+                ]
+              },
+              {
+                title: "4. Buen equilibrio entre corazón y cabeza",
+                content: [
+                  "Los dos grandes componentes de nuestra psicología son el mundo de la afectividad y el de la inteligencia... La clave está en buscar una buena armonía entre ellas.",
+                  "Tener una afectividad sana significa mover bien los hilos de las relaciones con los demás... Y a la vez saber utilizar bien los instrumentos de la razón."
+                ]
+              },
+              {
+                title: "5. Proyecto de vida coherente y realista",
+                content: [
+                  "Para ser feliz es necesario tener un proyecto de vida... y este debe albergar en su seno cuatro grandes argumentos: amor, trabajo, cultura y amistad.",
+                  "Debe ser coherente, lo que significa tener en su interior el menor número de contradicciones posibles... y realista: tener los pies en la tierra."
+                ]
+              },
+              {
+                title: "6. Hacer felices a los demás",
+                content: [
+                  "Poner los medios adecuados para hacer felices a otras personas. Cuando uno está intentando hacer esto se olvida de sí mismo, olvida sus problemas.",
+                  "Hay más alegría en dar que en recibir... Cambiar el foco de atención y volcarnos con los demás intentando darles alegría es de una gran eficacia."
+                ]
+              },
+              {
+                title: "7. Apreciar las pequeñas alegrías",
+                content: [
+                  "Capacidad para apreciar las pequeñas alegrías y placeres de la vida ordinaria... Se trata de saber parar el reloj y detener el tiempo que corre fugaz.",
+                  "Hay una felicidad pequeña, que aspira solo a saber disfrutar de lo menudo, de lo cotidiano, que va desde un paisaje bonito a una excursión... o la lectura de un libro."
+                ]
+              },
+              {
+                title: "8. Valorar lo que uno tiene",
+                content: [
+                  "Saber valorar las cosas que uno tiene y las que uno ha conseguido. Nos pasamos la vida pensando en el día de mañana, embebidos de futuro.",
+                  "Lo importante no es haber conseguido ciertas metas (que lo es), sino reconocerlo, apreciarlo, evaluarlo, reconocer que detrás de ello ha habido lucha."
+                ]
+              },
+              {
+                title: "9. Dar a las cosas la importancia real",
+                content: [
+                  "Saber darle a las cosas que nos pasan la importancia que realmente tienen... Ser capaz de tener una especie de justeza de juicio.",
+                  "Aprender a quitarle importancia a muchas cosas que nos suceden, evitando caer en la tristeza... y tener una buena perspectiva de la vida personal."
+                ]
+              },
+              {
+                title: "10. No equivocarse en las expectativas",
+                content: [
+                  "Saber poner freno a ambiciones excesivas. No pedirle a la vida demasiado, saber que la existencia humana siempre tiene limitaciones.",
+                  "La felicidad a la que debemos aspirar es a una felicidad razonable, que yo la resumiría en esta ecuación: logros / expectativas."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap13",
+            title: "13. Características de un líder",
+            synthesis: "El verdadero líder no es un ídolo, sino una autoridad moral que arrastra mediante la ejemplaridad, la coherencia de vida y el entusiasmo contagioso, a través de 7 características esenciales.",
+            subthemes: [
+              {
+                title: "1. Personalidad atrayente",
+                content: [
+                  "Toda personalidad tiene una capacidad de seducción: una mezcla de hechizo, carisma, admiración, cordialidad, que nos arrastra y empuja.",
+                  "Es un imán que nos atrae y convence con sus ideales. Las palabras mueven, el líder arrastra."
+                ]
+              },
+              {
+                title: "2. Coherencia",
+                content: [
+                  "Existe una buena proporción, un equilibrio, una conformidad entre el pensamiento y la realidad. Uno es lo que hace, no lo que dice.",
+                  "Liderar es servir. Es alguien auténtico, en quien se puede confiar, que no busca el aplauso ni el consenso."
+                ]
+              },
+              {
+                title: "3. Equilibrio entre corazón y cabeza",
+                content: [
+                  "Buen equilibrio entre los sentimientos y los instrumentos de la razón. Sabe ser afectivo y, a la vez, manejar bien la lógica y el juicio.",
+                  "Si es un líder de altura, llega a tener la sencillez de los sabios. Es la síntesis de lo esencial."
+                ]
+              },
+              {
+                title: "4. Autoridad",
+                content: [
+                  "Autoridad significa aquel que te hace crecer como persona. Que tira de ti hacia arriba, tratando de sacar lo mejor que llevas dentro.",
+                  "Es señorío, prestigio, ser escuchado y observado para aprender. El que solo tiene poder manda, pero no gobierna."
+                ]
+              },
+              {
+                title: "5. Capacidad para contagiar entusiasmo",
+                content: [
+                  "Su mirada aletea por encima de las dificultades y conflictos y sabe dar una visión optimista. Hay pocas cosas tan contagiosas como el entusiasmo.",
+                  "El líder es una persona admirada en quien la gente confía, con capacidad de convocatoria y fuerza para ilusionar."
+                ]
+              },
+              {
+                title: "6. Mostrar en público sus creencias",
+                content: [
+                  "Tiene el coraje de expresar lo que lleva dentro, huyendo de lo políticamente correcto, aun a costa de caer mal.",
+                  "El líder es escrutado por la gente, pero su solidez le permite manifestar sus convicciones con autenticidad."
+                ]
+              },
+              {
+                title: "7. Modelo de identidad",
+                content: [
+                  "A la gente que sigue sus pasos le gustaría parecerse a él. El verdadero líder te ayuda a ser mejor y a sacar lo mejor de tu persona.",
+                  "Nuestra sociedad necesita más testigos que maestros; vidas verdaderas más que gentes que explican teorías."
+                ]
+              }
+            ]
+          }
+        ];
+
+        function InteractiveDashboard() {
+          const [activeChapterId, setActiveChapterId] = useState(bookData[0].id);
+          const [searchQuery, setSearchQuery] = useState('');
+          const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+          const activeChapter = useMemo(() => 
+            bookData.find(ch => ch.id === activeChapterId) || bookData[0],
+            [activeChapterId]
+          );
+
+          // Lógica de búsqueda
+          const filteredSubthemes = useMemo(() => {
+            if (!searchQuery.trim()) {
+              return activeChapter.subthemes.map((subtheme, subIdx) => ({
+                id: `sub-${subIdx}`,
+                title: subtheme.title,
+                content: subtheme.content.map((text, textIdx) => ({ id: `text-${subIdx}-${textIdx}`, text, isMatch: true }))
+              }));
+            }
+
+            const lowerQuery = searchQuery.toLowerCase();
+            
+            return activeChapter.subthemes
+              .map((subtheme, subIdx) => {
+                const matchingContent = subtheme.content
+                  .map((text, textIdx) => ({
+                    id: `text-${subIdx}-${textIdx}`,
+                    text,
+                    isMatch: text.toLowerCase().includes(lowerQuery)
+                  }))
+                  .filter(item => item.isMatch);
+
+                return {
+                  id: `sub-${subIdx}`,
+                  title: subtheme.title,
+                  content: matchingContent
+                };
+              })
+              .filter(subtheme => subtheme.content.length > 0);
+
+          }, [activeChapter, searchQuery]);
+
+          // Función para resaltar el texto buscado
+          const highlightText = (text, highlight) => {
+            if (!highlight.trim()) return text;
+            const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+            return (
+              <span>
+                {parts.map((part, i) => 
+                  part.toLowerCase() === highlight.toLowerCase() ? 
+                    <mark key={i} className="bg-yellow-300 text-teal-900 rounded-sm px-0.5 font-medium shadow-sm">{part}</mark> : 
+                    part
+                )}
+              </span>
+            );
+          };
+
+          return (
+            <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden selection:bg-teal-200">
+              
+              {/* Overlay móvil */}
+              {isSidebarOpen && (
+                <div 
+                  className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-20 md:hidden transition-opacity"
+                  onClick={() => setIsSidebarOpen(false)}
+                />
+              )}
+
+              {/* Sidebar */}
+              <aside className={`
+                fixed md:static inset-y-0 left-0 z-30 w-80 bg-white border-r border-slate-200 shadow-2xl md:shadow-none
+                transform transition-transform duration-300 ease-in-out flex flex-col
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+              `}>
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 -mt-2 -mr-2 text-teal-50 opacity-60 transform rotate-12">
+                     <IconCompass size={110} />
+                  </div>
+                  <div className="relative z-10">
+                    <h1 className="text-xl font-extrabold text-slate-900 tracking-tight leading-tight">Todo lo que tienes que<br/><span className="text-teal-600 uppercase tracking-widest text-2xl">Saber sobre la vida</span></h1>
+                    <p className="text-sm font-medium text-slate-500 mt-2 flex items-center gap-1"><IconBookOpen size={14} className="text-teal-400"/> Enrique Rojas</p>
+                  </div>
+                  <button onClick={() => setIsSidebarOpen(false)} className="md:hidden relative z-10 text-slate-400 hover:text-slate-700 bg-slate-50 p-2 rounded-full">
+                    <IconX size={20} />
+                  </button>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+                  <ul className="space-y-1 px-3">
+                    {bookData.map((chapter) => (
+                      <li key={chapter.id}>
+                        <button
+                          onClick={() => {
+                            setActiveChapterId(chapter.id);
+                            setSearchQuery(''); 
+                            setIsSidebarOpen(false);
+                          }}
+                          className={`
+                            w-full text-left px-4 py-3 rounded-xl flex items-start gap-3 transition-all duration-200
+                            ${activeChapterId === chapter.id 
+                              ? 'bg-teal-600 text-white shadow-md shadow-teal-200' 
+                              : 'text-slate-600 hover:bg-teal-50 hover:text-teal-900'
+                            }
+                          `}
+                        >
+                          <div className={`mt-0.5 flex-shrink-0 ${activeChapterId === chapter.id ? 'text-teal-200' : 'text-teal-500'}`}>
+                             <IconBookOpen size={18} />
+                          </div>
+                          <span className="text-sm font-medium leading-snug">{chapter.title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </aside>
+
+              {/* Contenido principal */}
+              <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
+                
+                {/* Header de búsqueda */}
+                <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 sm:px-8 flex items-center gap-4 sticky top-0 z-10">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <IconMenu size={24} />
+                  </button>
+
+                  <div className="flex-1 max-w-2xl relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <IconSearch size={20} className="text-slate-400 group-focus-within:text-teal-600 transition-colors" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={`Buscar en "${activeChapter.title}"...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="block w-full pl-11 pr-10 py-3 border border-slate-300 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 sm:text-sm transition-all shadow-sm"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery('')}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700"
+                      >
+                        <div className="bg-slate-200 rounded-full p-1">
+                          <IconX size={14} />
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </header>
+
+                {/* Zona de lectura */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 scroll-smooth">
+                  <div className="max-w-3xl mx-auto pb-20">
+                    
+                    <div className="mb-6 flex items-center gap-2 text-xs uppercase tracking-wider text-teal-600 font-bold">
+                      <span>Estudio del Libro</span>
+                      <IconChevronRight size={14} className="text-slate-400" />
+                      <span className="text-slate-500">Lección seleccionada</span>
+                    </div>
+
+                    <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 tracking-tight leading-tight">
+                      {activeChapter.title}
+                    </h2>
+
+                    {!searchQuery && (
+                      <div className="bg-gradient-to-br from-teal-50 to-emerald-50/40 rounded-2xl p-6 sm:p-8 border border-teal-100/80 shadow-sm mb-12 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 -mt-4 -mr-4 text-teal-100 opacity-60 transform rotate-12">
+                          <IconLightbulb size={120} />
+                        </div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-4 text-teal-800">
+                            <IconLightbulb size={20} />
+                            <h3 className="font-bold text-lg">Síntesis de la Lección</h3>
+                          </div>
+                          <p className="text-slate-700 text-lg leading-relaxed font-medium">
+                            {activeChapter.synthesis}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {searchQuery && (
+                      <div className="flex items-center gap-2 mb-6 text-slate-800">
+                        <IconSearch size={20} className="text-teal-500" />
+                        <h3 className="font-bold text-xl">
+                          Resultados de la Búsqueda
+                        </h3>
+                      </div>
+                    )}
+
+                    <div className="space-y-12">
+                      {filteredSubthemes.length > 0 ? (
+                        filteredSubthemes.map((subtheme) => (
+                          <div key={subtheme.id} className="scroll-mt-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="bg-teal-100 p-2 rounded-lg shadow-sm">
+                                <IconHash size={20} className="text-teal-600" />
+                              </div>
+                              <h4 className="text-xl font-bold text-slate-800 leading-tight">
+                                {subtheme.title}
+                              </h4>
+                            </div>
+
+                            <div className="space-y-4 pl-4 sm:pl-10">
+                              {subtheme.content.map((paragraph) => (
+                                <div key={paragraph.id} className="group flex gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-teal-300 transition-all relative overflow-hidden">
+                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-teal-400 transition-colors"></div>
+                                  <div className="mt-1 flex-shrink-0 text-slate-200 group-hover:text-teal-200 transition-colors">
+                                    <IconQuote size={24} />
+                                  </div>
+                                  <p className="text-lg text-slate-700 leading-relaxed font-serif">
+                                    "{highlightText(paragraph.text, searchQuery)}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-20 px-6 bg-white border border-slate-200 border-dashed rounded-3xl mt-8">
+                          <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <IconSearch size={28} className="text-slate-400" />
+                          </div>
+                          <h3 className="text-lg font-bold text-slate-900 mb-2">Sin coincidencias textuales</h3>
+                          <p className="text-slate-500 max-w-md mx-auto">
+                            No se encontraron citas que contengan la frase "<span className="font-medium text-slate-800">{searchQuery}</span>" en esta lección.
+                          </p>
+                          <button 
+                            onClick={() => setSearchQuery('')}
+                            className="mt-6 px-4 py-2 bg-teal-50 text-teal-700 hover:bg-teal-100 hover:shadow-sm rounded-lg font-medium transition-all"
+                          >
+                            Mostrar todo el contenido
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              </main>
+
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<InteractiveDashboard />);
+    </script>
+</body>
+</html>
