@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivir más LIBRE - Tablero Interactivo</title>
+    
+    <!-- Cargamos Tailwind CSS para los estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cargamos React y ReactDOM para la interactividad -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Cargamos Babel para el JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #a5f3fc; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo } = React;
+
+        const IconSearch = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        const IconBookOpen = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
+        const IconChevronRight = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
+        const IconMenu = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const IconX = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconLightbulb = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>;
+        const IconQuote = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>;
+        const IconHash = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>;
+        const IconFeather = ({size=24, className=""}) => <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></svg>;
+
+        const bookData = [
+          {
+            id: "cap1",
+            title: "1. ¿Qué es la libertad?",
+            synthesis: "La libertad no consiste en hacer lo que nos da la gana, sino en la capacidad de elegir el bien y lo que nos conviene. El autor advierte contra los peligros de buscar una libertad absoluta (libertinaje), permitir que otros decidan por nosotros (miedo) y creer que la libertad es un fin en sí misma, en lugar de un medio para la felicidad y el crecimiento.",
+            subthemes: [
+              {
+                title: "La libertad: un anhelo posible",
+                content: [
+                  "Todo el mundo quiere alcanzarla, ser por fin libre y romper con las ataduras que nos atenazan.",
+                  "Cuanto más la buscamos más se aleja, y nuestra sociedad capitalista parece ser una fábrica de esclavos."
+                ]
+              },
+              {
+                title: "Hacia una definición práctica",
+                content: [
+                  "La libertad es la capacidad que tenemos para elegir el bien. Cuando escogemos el mal nos equivocamos y dicho error acaba convirtiéndonos en un esclavo.",
+                  "Ser libre no es hacer lo que queremos, sino lo que hemos considerado mejor y más conveniente."
+                ]
+              },
+              {
+                title: "El peligro de la libertad por exceso (libertinaje)",
+                content: [
+                  "El egoísmo y la libertad son incompatibles: las personas libres se caracterizan por su generosidad.",
+                  "Cuando el ser humano se convierte en la única vara de medir para configurar su conducta las consecuencias son devastadoras."
+                ]
+              },
+              {
+                title: "El miedo a ejercer la libertad",
+                content: [
+                  "El peor de los castigos posibles para un delito es la pena de privación de libertad. Deberíamos ser más cuidadosos con ella.",
+                  "Muchas personas han renunciado a ejercer la libertad... porque han decidido previamente que sea otra persona quien la ejerza por ellos.",
+                  "No decantarse por nada. La omisión solo lleva a la parálisis y esta nos incapacita para ser libres."
+                ]
+              },
+              {
+                title: "¿Para qué queremos ser libres?",
+                content: [
+                  "Buscar la libertad como un bien supremo, como un fin último, es un error. La libertad es un medio, precioso e imprescindible.",
+                  "La libertad debe obtenerse para algo, para utilizarla, para ejercitarla... Para hacer el bien."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap2",
+            title: "2. El hombre libre ¿nace o se hace?",
+            synthesis: "Frente a los determinismos biológicos y ambientales que afirman que no somos libres, el autor defiende que el ser humano es dueño de sus decisiones. Aunque nacemos con condicionantes, nuestra libertad nos permite sublimar instintos y superar nuestras circunstancias, como jugar bien las cartas que nos ha tocado en una partida de póquer.",
+            subthemes: [
+              {
+                title: "El determinismo biologicista y ambiental",
+                content: [
+                  "Reducir al ser humano a un conjunto específico de genes es tan simple y equivocado que acaba por generar planteamientos inhumanos.",
+                  "El único que está determinado por su genética es aquel que cree que lo está."
+                ]
+              },
+              {
+                title: "Superando el determinismo: el ejemplo del póquer",
+                content: [
+                  "Lo importante no son las cartas, sino lo que haces con ellas. Aunque la fortuna dispone, el hombre propone.",
+                  "El perdedor suele quejarse de que le tocaron malas cartas... excusas que pretenden eximirnos de asumir nuestra responsabilidad."
+                ]
+              },
+              {
+                title: "Diferencia entre humanos y animales",
+                content: [
+                  "El animal no hace nada que sea moral o inmoral. Sus conductas son automáticas... No ha sido diseñado para ser libre.",
+                  "El ser humano, a diferencia de cualquier animal, es el único ser vivo capaz de sublimar su instinto sexual buscando un bien mayor."
+                ]
+              },
+              {
+                title: "Cómo educar en la libertad",
+                content: [
+                  "No soy producto de mis circunstancias, soy producto de mis decisiones.",
+                  "Educar la libertad es como enseñar a esquiar... Nosotros debemos mostrarles el buen camino, pero no arrastrarlos por él."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap3",
+            title: "3. El hombre libre no está triste, no es adicto y no es violento",
+            synthesis: "El ejercicio adecuado de la libertad produce frutos claros: alegría, paz y autocontrol. Las adicciones y la violencia surgen cuando nos convertimos en esclavos de nuestras bajas pasiones. El autor nos invita a salir de nuestra zona de confort y a elegir conscientemente la serenidad.",
+            subthemes: [
+              {
+                title: "Elegir lo que nos libera",
+                content: [
+                  "Si solo nos empeñamos en evitar lo que puede generarnos daño, al final nos meteremos más y más adentro de nuestro mundo empequeñecido.",
+                  "La persona libre puede, y debe, optar por la alegría. No dedicar tiempo a temas que solo servirán para revolcarnos en el pesimismo."
+                ]
+              },
+              {
+                title: "La libertad frente a las adicciones",
+                content: [
+                  "El adicto ha perdido su libertad a base de hacer un mal uso de ella... solo puede comportarse siguiendo lo que le dicta el caprichoso tirano que le gobierna.",
+                  "La solución no está tanto en rechazar algo que nos causa daño, sino en decir que sí a algo que nos hace crecer."
+                ]
+              },
+              {
+                title: "Salir de la zona de confort",
+                content: [
+                  "Las personas nos expansionamos poco a poco, como una mancha de aceite que cada vez ocupa más espacio.",
+                  "El impulso es aquello que nos gustaría evitar, pero que no somos capaces de hacer porque nos domina. Esa es la moral del esclavo."
+                ]
+              },
+              {
+                title: "Las personas libres transmiten paz",
+                content: [
+                  "El ser humano libre no tiene ninguna necesidad de enfrentarse ni de discutir. Es dueño de sus palabras y de sus silencios.",
+                  "Quien cae en el insulto, en la crítica despiadada y en el ataque sistemático es el peor de los esclavos."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap4",
+            title: "4. La persona libre se ata al bien",
+            synthesis: "La verdadera libertad encuentra su plenitud cuando se compromete con el bien y asume las consecuencias de sus actos. El autor destaca la importancia de la humildad, el poder sanador del perdón y la necesidad de dar gracias a la vida como antídotos contra la soberbia y el rencor.",
+            subthemes: [
+              {
+                title: "¿Se puede ser libre haciendo el mal?",
+                content: [
+                  "El mal y la libertad son como el agua y el aceite. El mal siempre lleva consigo más mal... la tristeza, la culpa y el remordimiento.",
+                  "Obedecer al bien debemos escuchar con atención... El Bien es un absoluto que está grabado a fuego en el corazón del ser humano."
+                ]
+              },
+              {
+                title: "El poder sanador del perdón",
+                content: [
+                  "Nada libera más que el perdón. Podemos enfermar de rencor. Y cada acto de odio, de ofensa, nos quita un pedazo de libertad.",
+                  "Perdonar a los demás es un síntoma de humildad. Supone reconocer que también nosotros... hemos hecho daño a mucha gente."
+                ]
+              },
+              {
+                title: "Las personas libres dan las gracias",
+                content: [
+                  "Todo lo que hemos recibido... la vida, la familia, los talentos... todo es un regalo.",
+                  "Dar las gracias es un sinónimo de reconocernos poca cosa... Quienes confían solo en sí mismos son esclavos de su ser, gigantes con pies de barro."
+                ]
+              },
+              {
+                title: "La libertad se ejerce en el día a día",
+                content: [
+                  "El virtuoso es una persona fuerte... Tiene la fuerza de ejercer sin cortapisas su libertad. Hace el bien porque le sale de dentro.",
+                  "El ser humano libre hace lo que le da la gana cuando consigue que solo le dé la gana hacer lo correcto."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap5",
+            title: "5. La persona libre es responsable de su libertad",
+            synthesis: "Libertad y responsabilidad son dos caras de la misma moneda. Ser libre implica responder por nuestras elecciones, evitar la parálisis del miedo a equivocarnos y encontrar un equilibrio entre la impulsividad ciega y la obsesión inmovilizante.",
+            subthemes: [
+              {
+                title: "El binomio inseparable",
+                content: [
+                  "Máxima libertad, máxima responsabilidad. Asumir los más altos grados de libertad implica que deberemos hacernos cargo de las consecuencias.",
+                  "Una libertad exenta de responsabilidad es una libertad sin amor. Una libertad que no se compromete con nada ni con nadie no es fecunda."
+                ]
+              },
+              {
+                title: "Perder la libertad por miedo a la equivocación",
+                content: [
+                  "La manera más torpe, fácil y absurda de perder nuestra libertad es no ejerciéndola, poniéndonos siempre de perfil.",
+                  "En la vida siempre hay que elegir y no hay peor decisión que no tomar ninguna."
+                ]
+              },
+              {
+                title: "Impulsividad vs. Obsesión",
+                content: [
+                  "La frialdad emocional es una característica de la madurez... No debemos tomar una decisión en caliente.",
+                  "Los obsesivos creen que deben sopesar hasta la extenuación... 'Por el análisis a la parálisis'."
+                ]
+              },
+              {
+                title: "Libertad e individualismo",
+                content: [
+                  "La conquista de la libertad es un acto personal, algo que nadie puede hacer por nosotros.",
+                  "El individualismo tiene muy poco que ver con el egoísmo. La libertad se ejerce de cara a los demás."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap6",
+            title: "6. La libertad se alcanza cuando no tienes miedo a perderla",
+            synthesis: "El miedo y el perfeccionismo son grandes ladrones de autonomía. Para ser verdaderamente libres debemos aceptar nuestra vulnerabilidad, poner límites sanos a nuestros deseos y huir de la dependencia emocional que nos hace esclavos de la opinión ajena.",
+            subthemes: [
+              {
+                title: "La intención paradójica",
+                content: [
+                  "Entre aquellos que viven obsesionados por alcanzar la libertad es donde encontramos, con mayor frecuencia, un mayor número de esclavos.",
+                  "Para ser más libres debemos olvidarnos más de nosotros mismos."
+                ]
+              },
+              {
+                title: "Para ser libres debemos ser valientes",
+                content: [
+                  "La persona libre es valiente. Evita caer en quejas lastimeras o en excusas inmaduras.",
+                  "En infinidad de ocasiones a lo que le tenemos más miedo es aquello que nunca nos ha pasado y que jamás nos pasará."
+                ]
+              },
+              {
+                title: "Los límites y la imperfección",
+                content: [
+                  "Saltarse la norma, paradójicamente, hace que la libertad se convierta en un imposible.",
+                  "Toda persona libre busca ser mejor... Pero que no podamos alcanzar la perfección no quiere decir que no la busquemos. Debemos aceptar nuestros puntos débiles."
+                ]
+              },
+              {
+                title: "Incompatibilidad con la dependencia emocional",
+                content: [
+                  "Los que tienen rasgos de personalidad dependientes son especialistas en poner sus decisiones en manos ajenas... porque tienen pánico a equivocarse.",
+                  "El dependiente prefiere mirar hacia fuera. No quiere ser libre porque es más cómodo posicionarse en el papel de víctima."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap7",
+            title: "7. El hombre libre no piensa lo que quiere",
+            synthesis: "La libertad interior es el refugio más inexpugnable del ser humano. Se cultiva dominando nuestros pensamientos, buscando la verdad con valentía (aunque duela), evitando el rencor de la mala memoria y respetando la opinión de los disidentes.",
+            subthemes: [
+              {
+                title: "La libertad interior",
+                content: [
+                  "Lo que pensamos dentro de nuestro aparato mental solo nos pertenece a nosotros. Y ahí es donde se fragua el bien y el mal.",
+                  "A diario tenían la oportunidad de tomar una decisión... la última de las libertades humanas, la capacidad de elegir la actitud personal ante un conjunto de circunstancias (Viktor Frankl)."
+                ]
+              },
+              {
+                title: "Controlar los pensamientos",
+                content: [
+                  "Acostumbrémonos a no pensar lo que no debemos... Dejemos de darle coba a la maldad.",
+                  "Cuando pensamos mal de los demás, los ennegrecemos... Cuando pensamos bien, los obligamos a ser mejores."
+                ]
+              },
+              {
+                title: "La verdad os hará libres",
+                content: [
+                  "El hombre libre conoce la verdad, pues es imposible serlo en un mundo de mentiras y tinieblas.",
+                  "La mejor manera, de hecho, la única que hay, de alcanzar la verdadera libertad es aceptar nuestra verdad. Reconocer cómo somos."
+                ]
+              },
+              {
+                title: "Libertad y sentimiento de culpa",
+                content: [
+                  "No sentir vergüenza por nada, ser un sinvergüenza, es algo propio de una mente enferma.",
+                  "Quien reconoce el mal que hace ha subido un peldaño de gigante a la hora de ascender la escalera que lleva a la libertad."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap8",
+            title: "8. La libertad no puede ejercerse en soledad",
+            synthesis: "El amor es la máxima expresión de la libertad. Entregarse a los demás no es una atadura, sino una expansión de nuestro ser. Un mundo basado únicamente en el individualismo y el deseo centrado en uno mismo solo conduce a una profunda soledad.",
+            subthemes: [
+              {
+                title: "¿Son compatibles la libertad y el amor?",
+                content: [
+                  "Quiero a una persona porque la quiero querer... Pongo mi voluntad al servicio de ese amor.",
+                  "Si consideramos que el amor no es más que una vil atadura, una maldita cadena que nos condena... entonces no hemos encontrado el amor."
+                ]
+              },
+              {
+                title: "El regusto amargo del descontrol",
+                content: [
+                  "Una sociedad basada en el impulso, en la satisfacción inmediata del deseo... produce individuos incapaces de liberarse de las cadenas de sus apetencias.",
+                  "El deseo va hacia mí, es egocéntrico. El amor es liberador. Se da a los demás. Es generoso."
+                ]
+              },
+              {
+                title: "Para amar tenemos que dejar que nos amen",
+                content: [
+                  "Ser libre no consiste en elegir, sino en dejar que nos escojan.",
+                  "Para resultar atractivo debemos cuidarnos. Debemos buscar nuestra mejor versión... Lo que más atrae a los demás es la virtud."
+                ]
+              },
+              {
+                title: "Libertad, amor y felicidad",
+                content: [
+                  "Solo una persona libre puede ser amada. Solo alguien que ama sin cortapisas será capaz de amar con libertad.",
+                  "A mayor libertad, mayor amor y a mayor amor, mayor grado de libertad. Funcionar así hará que el corazón se nos llene de alegría."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap9",
+            title: "9. Para ser libre conviene ser disciplinado",
+            synthesis: "La constancia, la voluntad y la capacidad de decir 'no' a lo superficial son las herramientas para forjar la libertad diaria. Multiplicar las opciones no nos hace más libres, sino saber elegir lo correcto y dominar nuestras inclinaciones.",
+            subthemes: [
+              {
+                title: "Seguir una rutina",
+                content: [
+                  "Para ser libre, para subir los peldaños... hay que tener dos cosas claras: saber a dónde queremos ir y cómo hacerlo.",
+                  "La rutina es, por definición, monótona y repetitiva... Trabajaba todos los días para que cuando apareciera la inspiración le encontrara trabajando (Picasso)."
+                ]
+              },
+              {
+                title: "El engaño de las múltiples opciones",
+                content: [
+                  "La libertad tiene poco que ver con ensanchar el campo de actuación... La conquista de la libertad no es cuantitativa sino cualitativa.",
+                  "Cuanto más numerosas sean (las opciones), más dificultades tendremos para escoger y más posibilidades de equivocarnos."
+                ]
+              },
+              {
+                title: "La importancia de la voluntad",
+                content: [
+                  "Para hacer todo aquello que deseamos es imprescindible doblegar y formar la voluntad... Entrenarnos para conseguir que la libertad nos salga espontáneamente.",
+                  "Tener voluntad se basa mucho más en la renuncia que en la afirmación... Es decir que no a lo que no nos conviene."
+                ]
+              },
+              {
+                title: "El dominio de sí",
+                content: [
+                  "No es libre nadie que no se domine a sí mismo (Epicteto).",
+                  "O somos dueños de nosotros mismos, o torpes súbditos de un emperador de otro país."
+                ]
+              }
+            ]
+          },
+          {
+            id: "cap10",
+            title: "10. La raíz de la libertad",
+            synthesis: "El autor culmina explorando el porqué de nuestra libertad, sugiriendo que apunta a nuestra naturaleza de seres creados por Dios y llamados a una vocación trascendente. La libertad es el medio para responder a esa llamada con amor perfecto.",
+            subthemes: [
+              {
+                title: "Amigos de la esclavitud",
+                content: [
+                  "Hay demasiadas personas que viven de esclavizar a los demás, pues pocas cosas hay más rentables que invertir en las bajas pasiones.",
+                  "Optar por la mediocridad es propia de no haber superado un cierto complejo de inferioridad."
+                ]
+              },
+              {
+                title: "La libertad no es un fin en sí mismo",
+                content: [
+                  "La libertad siempre es libertad para algo. Para cambiar las cosas. Para ser mejor persona.",
+                  "Cuando no sabemos para qué debemos ser libres cometeremos el error de malgastar demasiado tiempo... en buscar algo que no sirve para nada."
+                ]
+              },
+              {
+                title: "El misterio de nuestra creación",
+                content: [
+                  "Es necesario aceptar que el ser humano debe poder hacer el mal, puesto que, si no fuera así, no podría ser libre.",
+                  "Somos libres porque hemos sido creados por otro... Porque alguien nos ha elegido para hacer algo concreto. Somos libres porque alguien nos ama."
+                ]
+              },
+              {
+                title: "Elegir la mejor opción",
+                content: [
+                  "Quien elige lo malo se hace malo. Quien elige lo bueno se hace bueno... Quien elige el amor se hace mejor, pues el acto más propio de la libertad es el amor.",
+                  "Ahora solo falta lo más fácil, decidir qué es lo que va a hacer con ese don tan maravilloso que ha recibido gratis: su libertad."
+                ]
+              }
+            ]
+          }
+        ];
+
+        function InteractiveDashboard() {
+          const [activeChapterId, setActiveChapterId] = useState(bookData[0].id);
+          const [searchQuery, setSearchQuery] = useState('');
+          const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+          const activeChapter = useMemo(() => 
+            bookData.find(ch => ch.id === activeChapterId) || bookData[0],
+            [activeChapterId]
+          );
+
+          // Lógica de búsqueda
+          const filteredSubthemes = useMemo(() => {
+            if (!searchQuery.trim()) {
+              return activeChapter.subthemes.map((subtheme, subIdx) => ({
+                id: `sub-${subIdx}`,
+                title: subtheme.title,
+                content: subtheme.content.map((text, textIdx) => ({ id: `text-${subIdx}-${textIdx}`, text, isMatch: true }))
+              }));
+            }
+
+            const lowerQuery = searchQuery.toLowerCase();
+            
+            return activeChapter.subthemes
+              .map((subtheme, subIdx) => {
+                const matchingContent = subtheme.content
+                  .map((text, textIdx) => ({
+                    id: `text-${subIdx}-${textIdx}`,
+                    text,
+                    isMatch: text.toLowerCase().includes(lowerQuery)
+                  }))
+                  .filter(item => item.isMatch);
+
+                return {
+                  id: `sub-${subIdx}`,
+                  title: subtheme.title,
+                  content: matchingContent
+                };
+              })
+              .filter(subtheme => subtheme.content.length > 0);
+
+          }, [activeChapter, searchQuery]);
+
+          // Función para resaltar el texto buscado
+          const highlightText = (text, highlight) => {
+            if (!highlight.trim()) return text;
+            const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
+            return (
+              <span>
+                {parts.map((part, i) => 
+                  part.toLowerCase() === highlight.toLowerCase() ? 
+                    <mark key={i} className="bg-yellow-300 text-slate-900 rounded-sm px-0.5 font-medium shadow-sm">{part}</mark> : 
+                    part
+                )}
+              </span>
+            );
+          };
+
+          return (
+            <div className="flex h-screen bg-slate-50 font-sans text-slate-800 overflow-hidden selection:bg-cyan-200">
+              
+              {/* Overlay móvil */}
+              {isSidebarOpen && (
+                <div 
+                  className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-20 md:hidden transition-opacity"
+                  onClick={() => setIsSidebarOpen(false)}
+                />
+              )}
+
+              {/* Sidebar */}
+              <aside className={`
+                fixed md:static inset-y-0 left-0 z-30 w-72 bg-white border-r border-slate-200 shadow-2xl md:shadow-none
+                transform transition-transform duration-300 ease-in-out flex flex-col
+                ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+              `}>
+                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 -mt-2 -mr-2 text-cyan-50 opacity-50 transform rotate-12">
+                     <IconFeather size={100} />
+                  </div>
+                  <div className="relative z-10">
+                    <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight leading-tight">Vivir más<br/><span className="text-cyan-600 uppercase tracking-widest">Libre</span></h1>
+                    <p className="text-sm font-medium text-slate-500 mt-1">Luis Gutiérrez Rojas</p>
+                  </div>
+                  <button onClick={() => setIsSidebarOpen(false)} className="md:hidden relative z-10 text-slate-400 hover:text-slate-700 bg-slate-50 p-2 rounded-full">
+                    <IconX size={20} />
+                  </button>
+                </div>
+
+                <nav className="flex-1 overflow-y-auto py-4 custom-scrollbar">
+                  <ul className="space-y-1 px-3">
+                    {bookData.map((chapter) => (
+                      <li key={chapter.id}>
+                        <button
+                          onClick={() => {
+                            setActiveChapterId(chapter.id);
+                            setSearchQuery(''); 
+                            setIsSidebarOpen(false);
+                          }}
+                          className={`
+                            w-full text-left px-4 py-3 rounded-xl flex items-start gap-3 transition-all duration-200
+                            ${activeChapterId === chapter.id 
+                              ? 'bg-cyan-600 text-white shadow-md shadow-cyan-200' 
+                              : 'text-slate-600 hover:bg-cyan-50 hover:text-cyan-900'
+                            }
+                          `}
+                        >
+                          <div className={`mt-0.5 flex-shrink-0 ${activeChapterId === chapter.id ? 'text-cyan-200' : 'text-cyan-500'}`}>
+                             <IconBookOpen size={18} />
+                          </div>
+                          <span className="text-sm font-medium leading-snug">{chapter.title}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </aside>
+
+              {/* Contenido principal */}
+              <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50/50">
+                
+                {/* Header de búsqueda */}
+                <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 sm:px-8 flex items-center gap-4 sticky top-0 z-10">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="md:hidden p-2 -ml-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <IconMenu size={24} />
+                  </button>
+
+                  <div className="flex-1 max-w-2xl relative group">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <IconSearch size={20} className="text-slate-400 group-focus-within:text-cyan-600 transition-colors" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder={`Buscar en "${activeChapter.title}"...`}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="block w-full pl-11 pr-10 py-3 border border-slate-300 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 sm:text-sm transition-all shadow-sm"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => setSearchQuery('')}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700"
+                      >
+                        <div className="bg-slate-200 rounded-full p-1">
+                          <IconX size={14} />
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </header>
+
+                {/* Zona de lectura */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-8 md:p-12 scroll-smooth">
+                  <div className="max-w-3xl mx-auto pb-20">
+                    
+                    <div className="mb-6 flex items-center gap-2 text-xs uppercase tracking-wider text-cyan-600 font-bold">
+                      <span>Estudio del Libro</span>
+                      <IconChevronRight size={14} className="text-slate-400" />
+                      <span className="text-slate-500">Capítulo seleccionado</span>
+                    </div>
+
+                    <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 tracking-tight leading-tight">
+                      {activeChapter.title}
+                    </h2>
+
+                    {!searchQuery && (
+                      <div className="bg-gradient-to-br from-cyan-50 to-blue-50/40 rounded-2xl p-6 sm:p-8 border border-cyan-100/80 shadow-sm mb-12 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 -mt-4 -mr-4 text-cyan-100 opacity-60 transform rotate-12">
+                          <IconLightbulb size={120} />
+                        </div>
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-4 text-cyan-800">
+                            <IconLightbulb size={20} />
+                            <h3 className="font-bold text-lg">Síntesis del Capítulo</h3>
+                          </div>
+                          <p className="text-slate-700 text-lg leading-relaxed font-medium">
+                            {activeChapter.synthesis}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {searchQuery && (
+                      <div className="flex items-center gap-2 mb-6 text-slate-800">
+                        <IconSearch size={20} className="text-cyan-500" />
+                        <h3 className="font-bold text-xl">
+                          Resultados de la Búsqueda
+                        </h3>
+                      </div>
+                    )}
+
+                    <div className="space-y-12">
+                      {filteredSubthemes.length > 0 ? (
+                        filteredSubthemes.map((subtheme) => (
+                          <div key={subtheme.id} className="scroll-mt-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="bg-cyan-100 p-2 rounded-lg shadow-sm">
+                                <IconHash size={20} className="text-cyan-600" />
+                              </div>
+                              <h4 className="text-xl font-bold text-slate-800 leading-tight">
+                                {subtheme.title}
+                              </h4>
+                            </div>
+
+                            <div className="space-y-4 pl-4 sm:pl-10">
+                              {subtheme.content.map((paragraph) => (
+                                <div key={paragraph.id} className="group flex gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all relative overflow-hidden">
+                                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 group-hover:bg-cyan-400 transition-colors"></div>
+                                  <div className="mt-1 flex-shrink-0 text-slate-200 group-hover:text-cyan-200 transition-colors">
+                                    <IconQuote size={24} />
+                                  </div>
+                                  <p className="text-lg text-slate-700 leading-relaxed font-serif">
+                                    "{highlightText(paragraph.text, searchQuery)}"
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-20 px-6 bg-white border border-slate-200 border-dashed rounded-3xl mt-8">
+                          <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <IconSearch size={28} className="text-slate-400" />
+                          </div>
+                          <h3 className="text-lg font-bold text-slate-900 mb-2">Sin coincidencias textuales</h3>
+                          <p className="text-slate-500 max-w-md mx-auto">
+                            No se encontraron citas que contengan la frase "<span className="font-medium text-slate-800">{searchQuery}</span>" en este capítulo.
+                          </p>
+                          <button 
+                            onClick={() => setSearchQuery('')}
+                            className="mt-6 px-4 py-2 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 hover:shadow-sm rounded-lg font-medium transition-all"
+                          >
+                            Mostrar todo el contenido
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                </div>
+              </main>
+
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<InteractiveDashboard />);
+    </script>
+</body>
+</html>
