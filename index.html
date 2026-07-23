@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Biblioteca</title>
+    
+    <!-- Cargamos Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Configuración para que se comporte como App Nativa en el celular -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+
+    <style>
+        /* Estilos para evitar la selección de texto en móviles y dar sensación de App Nativa */
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #0f172a; /* Slate 900 */
+        }
+        
+        /* Ocultar scrollbar para un look más limpio */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col">
+
+    <header class="pt-12 pb-6 px-6 bg-slate-900 sticky top-0 z-10 shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+            <div>
+                <p class="text-slate-400 text-sm font-medium uppercase tracking-wider mb-1">Colección Personal</p>
+                <h1 class="text-3xl font-extrabold text-white tracking-tight">Mi Biblioteca</h1>
+            </div>
+            <!-- Ícono de perfil/usuario -->
+            <div class="w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-700 shadow-inner">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 px-4 pb-24 overflow-y-auto bg-slate-950 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+        
+        <div class="mt-8 mb-6 flex items-center justify-between px-2">
+            <h2 class="text-lg font-bold text-slate-200">Libros de Estudio</h2>
+            <span class="text-xs font-semibold bg-slate-800 text-slate-300 px-3 py-1 rounded-full">2 libros</span>
+        </div>
+
+        <div class="space-y-4">
+            
+            <!-- NOTA: El enlace apunta a "vida.html". Ahí deberá estar el tablero de Enrique Rojas -->
+            <a href="vida.html" class="block active:scale-[0.98] transition-transform duration-200">
+                <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex gap-4 items-center shadow-lg relative overflow-hidden">
+                    <!-- Efecto de brillo de fondo -->
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-teal-500/10 blur-3xl rounded-full"></div>
+                    
+                    <!-- Portada simulada -->
+                    <div class="w-20 h-28 bg-gradient-to-br from-teal-600 to-cyan-800 rounded-lg shadow-md flex-shrink-0 flex items-center justify-center relative overflow-hidden border border-teal-500/30">
+                        <div class="absolute inset-0 bg-black/10"></div>
+                        <span class="text-white font-serif font-bold text-3xl opacity-80">E</span>
+                    </div>
+
+                    <!-- Información del libro -->
+                    <div class="flex-1 py-1">
+                        <p class="text-teal-400 text-xs font-bold uppercase tracking-wider mb-1">Enrique Rojas</p>
+                        <h3 class="text-white font-bold leading-tight mb-2 text-lg">Todo lo que tienes que saber sobre la vida</h3>
+                        <div class="flex items-center gap-1.5 text-slate-400 text-xs font-medium">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            13 Lecciones
+                        </div>
+                    </div>
+
+                    <!-- Flecha de navegación -->
+                    <div class="text-slate-500 mr-1">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+            <!-- NOTA: El enlace apunta a "belleza.html". Ahí deberá estar el tablero de Luis Gutiérrez Rojas -->
+            <a href="belleza.html" class="block active:scale-[0.98] transition-transform duration-200">
+                <div class="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 flex gap-4 items-center shadow-lg relative overflow-hidden">
+                    <!-- Efecto de brillo de fondo -->
+                    <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full"></div>
+
+                    <!-- Portada simulada -->
+                    <div class="w-20 h-28 bg-gradient-to-br from-blue-500 to-indigo-700 rounded-lg shadow-md flex-shrink-0 flex items-center justify-center relative overflow-hidden border border-blue-400/30">
+                        <div class="absolute inset-0 bg-black/10"></div>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    </div>
+
+                    <!-- Información del libro -->
+                    <div class="flex-1 py-1">
+                        <p class="text-blue-400 text-xs font-bold uppercase tracking-wider mb-1">Luis Gutiérrez Rojas</p>
+                        <h3 class="text-white font-bold leading-tight mb-2 text-lg">La Belleza de Vivir / Vivir Más Libre</h3>
+                        <div class="flex items-center gap-1.5 text-slate-400 text-xs font-medium">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            10 Capítulos
+                        </div>
+                    </div>
+
+                    <!-- Flecha de navegación -->
+                    <div class="text-slate-500 mr-1">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full bg-slate-900/90 backdrop-blur-md border-t border-slate-800 pb-safe pt-2 px-6 flex justify-around items-center z-20">
+        <!-- Es importante usar pb-safe (padding-bottom env(safe-area-inset-bottom)) en apps reales de iOS, aquí lo simulamos con pb-6 -->
+        <div class="flex flex-col items-center justify-center p-2 text-teal-400 cursor-pointer pb-6">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span class="text-[10px] font-semibold">Inicio</span>
+        </div>
+        <div class="flex flex-col items-center justify-center p-2 text-slate-500 hover:text-slate-300 cursor-pointer pb-6 transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span class="text-[10px] font-semibold">Buscar</span>
+        </div>
+        <div class="flex flex-col items-center justify-center p-2 text-slate-500 hover:text-slate-300 cursor-pointer pb-6 transition-colors">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+            <span class="text-[10px] font-semibold">Etiquetas</span>
+        </div>
+    </nav>
+
+</body>
+</html>
